@@ -1,6 +1,9 @@
+import os
 from gzip import GzipFile
 from io import BytesIO
 from json import dumps, loads
+
+from benchmarks.constants import RESULTS_DIR
 
 
 def to_json(obj: object) -> str:
@@ -37,4 +40,4 @@ def strategy_compress(instance, raw_email_dict: dict, compressed_filename: str) 
 
 
 def get_strategy_dir(strategy: type) -> str:
-    return strategy.__name__.lower()
+    return os.path.join(RESULTS_DIR, strategy.__name__.lower())

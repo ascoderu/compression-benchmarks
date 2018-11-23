@@ -28,8 +28,7 @@ for strategy in strategies:
     table = tablib.Dataset(headers=headers)
     strategy_dir = get_strategy_dir(strategy)
 
-    if not os.path.exists(strategy_dir):
-        os.mkdir(strategy_dir)
+    os.makedirs(strategy_dir, exist_ok=True)
 
     for file in email_files:
         try:
