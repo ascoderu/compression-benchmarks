@@ -3,8 +3,8 @@ from os import makedirs
 from os.path import join, basename, dirname
 from sys import stderr
 
-import colorama
-import tablib
+from colorama import Fore, Style
+from tablib import Dataset
 
 from benchmarks import strategy
 from benchmarks.utils import filesize, load_sample_email, timer
@@ -25,8 +25,7 @@ sample_emails = [(path, load_sample_email(path)) for path in glob(join(SAMPLE_EM
 
 for strategy in strategies:
     headers = [strategy.EXTENSION, 'Original Size', 'After Compression']
-    dataset = []
-    table = tablib.Dataset(headers=headers)
+    table = Dataset(headers=headers)
     strategy_dir = join(RESULTS_DIR, strategy.__name__.lower())
     durations = []
 
@@ -42,7 +41,6 @@ for strategy in strategies:
         except Exception as e:
             print(e, file=stderr)
 
-    print(colorama.Fore.GREEN, table.export('df'))
-    print(colorama.Fore.RED + 'Compression for strategy {} took {} seconds\n\n'
-          .format(strategy.__name__, sum(durations)))
-    print(colorama.Style.RESET_ALL)
+    print(Fore.GREEN, table.export('df'))
+    print(Fore.RED + 'Compression for strategy {} took {} seconds\n\n'.format(strategy.__name__, sum(durations)))
+    print(Style.RESET_ALL)
