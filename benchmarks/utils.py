@@ -1,4 +1,3 @@
-import contextlib
 import gzip
 import json
 import os
@@ -16,9 +15,8 @@ def load_sample_email(path):
         return json.loads(raw_sample_email)
 
 
-@contextlib.contextmanager
-def timer(durations):
+def timer(callback):
     start = datetime.now()
-    yield
+    callback()
     end = datetime.now()
-    durations.append((end - start).total_seconds())
+    return (end - start).total_seconds()
