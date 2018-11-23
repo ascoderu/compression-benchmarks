@@ -30,7 +30,7 @@ for strategy_name, strategy in strategies:
         except Exception as e:
             table.append(('', 'ERROR', 'ERROR', 'ERROR'))
         else:
-            table.append(('', filesize(original_file), filesize(compressed_path), '{:.4f} s'.format(duration)))
+            table.append(('', filesize(original_file), filesize(compressed_path), duration))
 
     print(Fore.GREEN, table.export('df'))
     print(Style.RESET_ALL)

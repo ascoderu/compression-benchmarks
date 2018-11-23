@@ -19,4 +19,5 @@ def timer(callback):
     start = datetime.now()
     callback()
     end = datetime.now()
-    return (end - start).total_seconds()
+    ellapsed = (end - start).total_seconds()
+    return '{:.4f}'.format(ellapsed)
