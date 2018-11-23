@@ -32,7 +32,7 @@ def gunzip_file(filepath: str) -> dict:
     return loads(gunzip_string(data))
 
 
-def strategy_compress(instance: type, raw_email_dict: dict, compressed_filename: str) -> bool:
+def strategy_compress(instance, raw_email_dict: dict, compressed_filename: str) -> bool:
     return instance.compress(raw_email_dict, compressed_filename)
 
 
