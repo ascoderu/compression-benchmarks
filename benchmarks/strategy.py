@@ -1,5 +1,5 @@
+import gzip
 import json
-from json import dumps
 
 import avro.schema
 import bson
@@ -7,9 +7,12 @@ import msgpack
 from avro.datafile import DataFileReader, DataFileWriter
 from avro.io import DatumReader, DatumWriter
 
-from .constants import (
-    AVRO_SCHEMA_DIR
-)
+from benchmarks.utils import load_sample_email
+from benchmarks.constants import AVRO_SCHEMA_DIR
+
+
+def to_json(obj: object) -> str:
+    return json.dumps(obj, separators=(',', ':'))
 
 
 class NoCompression:
@@ -18,12 +21,25 @@ class NoCompression:
     @staticmethod
     def compress(contents: dict, compressed_filename: str) -> None:
         with open(compressed_filename, 'w') as compressed_file:
-            compressed_file.write(dumps(contents))
+            compressed_file.write(to_json(contents))
 
     @staticmethod
     def decompress(compressed_filename: str) -> None:
         with open(compressed_filename, 'r') as compressed_file:
             return json.load(compressed_file)
+
+
+class Gzip:
+    EXTENSION = '.json.gz'
+
+    @staticmethod
+    def compress(contents: dict, compressed_filename: str) -> None:
+        with gzip.open(compressed_filename, 'wb') as compressed_file:
+            compressed_file.write(to_json(contents).encode('utf-8'))
+
+    @staticmethod
+    def decompress(compressed_filename: str) -> None:
+        return load_sample_email(compressed_filename)
 
 
 class Msgpack:
@@ -68,5 +84,6 @@ class Avro:
 
     @staticmethod
     def decompress(compressed_filename: str) -> DataFileReader:
-        reader = DataFileReader(open(compressed_filename, 'rb'), DatumReader())
-        return reader
+        with open(compressed_filename, 'rb') as fobj:
+            reader = DataFileReader(fobj, DatumReader())
+            return reader
