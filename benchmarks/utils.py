@@ -1,40 +1,32 @@
-from gzip import GzipFile
-from io import BytesIO
-from json import dumps, loads
+import gzip
+import json
+import os
+from datetime import datetime
+from inspect import getmembers, isclass
+
+from benchmarks import strategy
 
 
-def to_json(obj: object) -> str:
-    return dumps(obj, separators=(',', ':'))
+def filesize(path):
+    size = os.stat(path).st_size / 1024
+    return '{:.2f} kb'.format(size)
 
 
-def gzip_string(uncompressed: str) -> bytes:
-    uncompressed_bytes = uncompressed.encode()
-    stream = BytesIO()
-    with GzipFile(fileobj=stream, mode='wb') as fobj:
-        fobj.write(uncompressed_bytes)  # type: ignore
-    stream.seek(0)
-    compressed = stream.read()
-    return compressed
+def load_sample_email(path):
+    with gzip.open(path, 'r') as fobj:
+        raw_sample_email = fobj.read().decode('utf-8')
+        return json.loads(raw_sample_email)
 
 
-def gunzip_string(compressed: bytes) -> str:
-    stream = BytesIO()
-    stream.write(compressed)
-    stream.seek(0)
-    with GzipFile(fileobj=stream, mode='rb') as fobj:
-        uncompressed_bytes = fobj.read()  # type: ignore
-    uncompressed = uncompressed_bytes.decode()
-    return uncompressed
+def timer(callback):
+    start = datetime.now()
+    callback()
+    end = datetime.now()
+    ellapsed = (end - start).total_seconds()
+    return '{:.4f}'.format(ellapsed)
 
 
-def gunzip_file(filepath: str) -> dict:
-    data = open(filepath, 'rb').read()
-    return loads(gunzip_string(data))
-
-
-def strategy_compress(instance: type, raw_email_dict: dict, compressed_filename: str) -> bool:
-    return instance.compress(raw_email_dict, compressed_filename)
-
-
-def get_strategy_dir(strategy: type) -> str:
-    return strategy.__name__.lower()
+def get_strategies():
+    return [(name.replace('Strategy', '').lower(), clazz)
+            for name, clazz in getmembers(strategy, isclass)
+            if name.endswith('Strategy')]

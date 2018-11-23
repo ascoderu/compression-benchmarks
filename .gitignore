@@ -1,0 +1,10 @@
+# project-specific
+results/
+
+# editors
+.vscode/
+.idea/
+
+# python
+venv/
+__pycache__/
