@@ -3,12 +3,10 @@ import json
 from os.path import dirname, join
 
 import avro.schema
-import bson
 import msgpack
 from avro.datafile import DataFileReader, DataFileWriter
 from avro.io import DatumReader, DatumWriter
-
-from benchmarks.utils import load_sample_email
+from bson import BSON
 
 
 def to_json(obj: object) -> str:
@@ -39,7 +37,8 @@ class GzipStrategy:
 
     @staticmethod
     def decompress(compressed_filename: str) -> None:
-        return load_sample_email(compressed_filename)
+        with gzip.open(compressed_filename, 'rb') as fobj:
+            return json.loads(fobj.read().decode('utf-8'))
 
 
 class MsgpackStrategy:
@@ -62,12 +61,13 @@ class BsonStrategy:
     @staticmethod
     def compress(contents: dict, compressed_filename: str) -> None:
         with open(compressed_filename, 'wb') as compressed_file:
-            compressed_file.write(bson.BSON.encode(contents))
+            compressed_file.write(BSON.encode(contents))
 
     @staticmethod
     def decompress(compressed_filename: str) -> dict:
         with open(compressed_filename, 'rb') as compressed_file:
-            return bson.BSON.decode(compressed_file.read())
+            compressed = BSON(compressed_file.read())
+            return dict(compressed.decode())
 
 
 class AvroStrategy:

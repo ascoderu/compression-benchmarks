@@ -2,6 +2,9 @@ import gzip
 import json
 import os
 from datetime import datetime
+from inspect import getmembers, isclass
+
+from benchmarks import strategy
 
 
 def filesize(path):
@@ -21,3 +24,9 @@ def timer(callback):
     end = datetime.now()
     ellapsed = (end - start).total_seconds()
     return '{:.4f}'.format(ellapsed)
+
+
+def get_strategies():
+    return [(name.replace('Strategy', '').lower(), clazz)
+            for name, clazz in getmembers(strategy, isclass)
+            if name.endswith('Strategy')]
