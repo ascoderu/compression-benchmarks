@@ -12,7 +12,7 @@ from .constants import (
 )
 
 
-class OriginalStrategy:
+class NoCompression:
     EXTENSION = '.json'
 
     @staticmethod
@@ -26,7 +26,7 @@ class OriginalStrategy:
             return json.load(compressed_file)
 
 
-class MsgpackStrategy:
+class Msgpack:
     EXTENSION = '.msgpack'
 
     @staticmethod
@@ -40,7 +40,7 @@ class MsgpackStrategy:
             return msgpack.unpack(compressed_file)
 
 
-class BsonStrategy:
+class Bson:
     EXTENSION = '.bson'
 
     @staticmethod
@@ -54,7 +54,7 @@ class BsonStrategy:
             return bson.BSON.decode(compressed_file.read())
 
 
-class AvroStrategy:
+class Avro:
     EXTENSION = '.avro'
 
     @staticmethod

@@ -6,18 +6,13 @@ from timeit import default_timer
 
 from benchmarks.constants import EMAILS_DIR
 from benchmarks.utils import (strategy_compress, get_strategy_dir, gunzip_file)
-from benchmarks.strategy import (
-    OriginalStrategy,
-    MsgpackStrategy,
-    BsonStrategy,
-    AvroStrategy,
-)
+from benchmarks import strategy
 
 strategies = [
-    MsgpackStrategy,
-    BsonStrategy,
-    OriginalStrategy,
-    AvroStrategy,
+    strategy.Avro,
+    strategy.Bson,
+    strategy.Msgpack,
+    strategy.NoCompression,
 ]
 
 email_files = os.listdir(EMAILS_DIR)
