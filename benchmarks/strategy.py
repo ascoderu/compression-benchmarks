@@ -1,5 +1,6 @@
 import gzip
 import json
+from os.path import dirname, join
 
 import avro.schema
 import bson
@@ -8,7 +9,6 @@ from avro.datafile import DataFileReader, DataFileWriter
 from avro.io import DatumReader, DatumWriter
 
 from benchmarks.utils import load_sample_email
-from benchmarks.constants import AVRO_SCHEMA_DIR
 
 
 def to_json(obj: object) -> str:
@@ -75,7 +75,8 @@ class Avro:
 
     @staticmethod
     def compress(contents: dict, compressed_filename: str) -> None:
-        schema = avro.schema.Parse(open(AVRO_SCHEMA_DIR, "rb").read())
+        with open(join(dirname(__file__), 'email.avsc')) as fobj:
+            schema = avro.schema.Parse(fobj.read())
 
         with open(compressed_filename, 'wb') as compressed_file:
             writer = DataFileWriter(compressed_file, DatumWriter(), schema)
