@@ -16,16 +16,17 @@ for strategy_name, strategy in get_strategies():
     strategy_dir = join(RESULTS_DIR, strategy_name)
     makedirs(strategy_dir, exist_ok=True)
 
-    table = Dataset(headers=[strategy.EXTENSION, 'Original', 'Compressed', 'Duration'])
+    table = Dataset(title=strategy_name, headers=['Original', 'Compressed', 'Duration'])
 
     for original_file, sample_email in sample_emails:
         compressed_path = join(strategy_dir, basename(original_file) + strategy.EXTENSION)
         try:
             duration = timer(lambda: strategy.compress(sample_email, compressed_path))
         except Exception as e:
-            table.append(('', 'ERROR', 'ERROR', 'ERROR'))
+            table.append(['ERROR'] * len(table.headers))
         else:
-            table.append(('', filesize(original_file), filesize(compressed_path), duration))
+            table.append((filesize(original_file), filesize(compressed_path), duration))
 
+    print(Fore.YELLOW, table.title)
     print(Fore.GREEN, table.export('df'))
     print(Style.RESET_ALL)
