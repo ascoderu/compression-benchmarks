@@ -15,7 +15,7 @@ def to_json(obj: object) -> str:
     return json.dumps(obj, separators=(',', ':'))
 
 
-class NoCompression:
+class NoCompressionStrategy:
     EXTENSION = '.json'
 
     @staticmethod
@@ -29,7 +29,7 @@ class NoCompression:
             return json.load(compressed_file)
 
 
-class Gzip:
+class GzipStrategy:
     EXTENSION = '.json.gz'
 
     @staticmethod
@@ -42,7 +42,7 @@ class Gzip:
         return load_sample_email(compressed_filename)
 
 
-class Msgpack:
+class MsgpackStrategy:
     EXTENSION = '.msgpack'
 
     @staticmethod
@@ -56,7 +56,7 @@ class Msgpack:
             return msgpack.unpack(compressed_file)
 
 
-class Bson:
+class BsonStrategy:
     EXTENSION = '.bson'
 
     @staticmethod
@@ -70,7 +70,7 @@ class Bson:
             return bson.BSON.decode(compressed_file.read())
 
 
-class Avro:
+class AvroStrategy:
     EXTENSION = '.avro'
 
     @staticmethod

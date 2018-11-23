@@ -1,4 +1,5 @@
 from glob import glob
+from inspect import getmembers, isclass
 from os import makedirs
 from os.path import join, basename, dirname
 
@@ -11,23 +12,16 @@ from benchmarks.utils import filesize, load_sample_email, timer
 RESULTS_DIR = 'results'
 SAMPLE_EMAILS_DIR = join(dirname(__file__), 'sample-emails')
 
-strategies = [
-    strategy.Gzip,
-    strategy.Avro,
-    strategy.Bson,
-    strategy.Msgpack,
-    strategy.NoCompression,
-]
-
 sample_emails = [(path, load_sample_email(path)) for path in glob(join(SAMPLE_EMAILS_DIR, '*'))]
 
+strategies = [(name.replace('Strategy', '').lower(), clazz)
+              for name, clazz in getmembers(strategy, isclass) if name.endswith('Strategy')]
 
-for strategy in strategies:
-    strategy_dir = join(RESULTS_DIR, strategy.__name__.lower())
+for strategy_name, strategy in strategies:
+    strategy_dir = join(RESULTS_DIR, strategy_name)
     makedirs(strategy_dir, exist_ok=True)
 
-    headers = [strategy.EXTENSION, 'Original', 'Compressed', 'Duration']
-    table = Dataset(headers=headers)
+    table = Dataset(headers=[strategy.EXTENSION, 'Original', 'Compressed', 'Duration'])
 
     for original_file, sample_email in sample_emails:
         compressed_path = join(strategy_dir, '{}{}'.format(basename(original_file), strategy.EXTENSION))
