@@ -22,7 +22,7 @@ class NoCompressionStrategy:
             compressed_file.write(to_json(contents))
 
     @staticmethod
-    def decompress(compressed_filename: str) -> None:
+    def decompress(compressed_filename: str) -> dict:
         with open(compressed_filename, 'r') as compressed_file:
             return json.load(compressed_file)
 
@@ -36,7 +36,7 @@ class GzipStrategy:
             compressed_file.write(to_json(contents).encode('utf-8'))
 
     @staticmethod
-    def decompress(compressed_filename: str) -> None:
+    def decompress(compressed_filename: str) -> dict:
         with gzip.open(compressed_filename, 'rb') as fobj:
             return json.loads(fobj.read().decode('utf-8'))
 
