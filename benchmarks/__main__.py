@@ -1,7 +1,7 @@
 from argparse import ArgumentParser
 from glob import glob
 from os import makedirs
-from os.path import join, basename, dirname
+from os.path import join, basename
 
 from colorama import Fore, Style
 from tablib import Dataset
@@ -11,7 +11,7 @@ from benchmarks.utils import filesize, load_sample_email, timer, get_strategies,
 parser = ArgumentParser()
 parser.add_argument('emails_zip_url')
 parser.add_argument('--results_dir', default='results')
-parser.add_argument('--inputs_dir', default=join(dirname(__file__), 'sample-emails'))
+parser.add_argument('--inputs_dir', default='sample-emails')
 args = parser.parse_args()
 
 download_sample_emails(args.emails_zip_url, args.inputs_dir)
