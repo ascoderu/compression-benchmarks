@@ -2,4 +2,5 @@ avro-python3==1.8.2
 colorama==0.4.0
 msgpack==0.5.6
 pymongo==3.7.2
+requests==2.20.1
 tablib[pandas]==0.12.1

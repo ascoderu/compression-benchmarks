@@ -3,8 +3,35 @@ import json
 import os
 from datetime import datetime
 from inspect import getmembers, isclass
+from shutil import copyfileobj
+from tempfile import NamedTemporaryFile
+from zipfile import ZipFile
+
+import requests
 
 from benchmarks import strategy
+
+
+def download_to_file(url):
+    response = requests.get(url, stream=True)
+    response.raise_for_status()
+
+    with NamedTemporaryFile(mode='wb', delete=False) as fobj:
+        copyfileobj(response.raw, fobj)
+
+    return fobj.name
+
+
+def download_sample_emails(emails_zip_url, inputs_dir):
+    if os.path.isdir(inputs_dir):
+        return
+
+    emails_zip = download_to_file(emails_zip_url)
+    try:
+        os.makedirs(inputs_dir, exist_ok=True)
+        ZipFile(emails_zip).extractall(inputs_dir)
+    finally:
+        os.remove(emails_zip)
 
 
 def filesize(path):

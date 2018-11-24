@@ -1,3 +1,4 @@
+from argparse import ArgumentParser
 from glob import glob
 from os import makedirs
 from os.path import join, basename, dirname
@@ -5,15 +6,20 @@ from os.path import join, basename, dirname
 from colorama import Fore, Style
 from tablib import Dataset
 
-from benchmarks.utils import filesize, load_sample_email, timer, get_strategies
+from benchmarks.utils import filesize, load_sample_email, timer, get_strategies, download_sample_emails
 
-RESULTS_DIR = 'results'
-SAMPLE_EMAILS_DIR = join(dirname(__file__), 'sample-emails')
+parser = ArgumentParser()
+parser.add_argument('emails_zip_url')
+parser.add_argument('--results_dir', default='results')
+parser.add_argument('--inputs_dir', default=join(dirname(__file__), 'sample-emails'))
+args = parser.parse_args()
 
-sample_emails = [(path, load_sample_email(path)) for path in glob(join(SAMPLE_EMAILS_DIR, '*'))]
+download_sample_emails(args.emails_zip_url, args.inputs_dir)
+
+sample_emails = [(path, load_sample_email(path)) for path in glob(join(args.inputs_dir, '*'))]
 
 for strategy_name, strategy in get_strategies():
-    strategy_dir = join(RESULTS_DIR, strategy_name)
+    strategy_dir = join(args.results_dir, strategy_name)
     makedirs(strategy_dir, exist_ok=True)
 
     table = Dataset(title=strategy_name, headers=['Original', 'Compressed', 'Duration'])
