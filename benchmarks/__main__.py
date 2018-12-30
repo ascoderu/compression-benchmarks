@@ -26,6 +26,8 @@ Benchmark = namedtuple('Benchmark', (
     'ReadTimeSeconds',
 ))
 
+ERROR = 'ERROR'
+
 
 def load_samples(zip_url, inputs_dir, exclude_attachments):
     download_sample_emails(zip_url, inputs_dir)
@@ -63,8 +65,8 @@ def run_benchmarks(emails, results_dir, incremental):
                     serializer.serialize(iter(emails), fobj)
         except Exception as ex:
             print_error('write', compressor, serializer, ex)
-            write_time = 'ERROR'
-            filesize = 'ERROR'
+            write_time = ERROR
+            filesize = ERROR
         else:
             write_time = write_timer.seconds()
             filesize = '{:.2f}'.format(filesize_kb(outpath))
@@ -76,7 +78,7 @@ def run_benchmarks(emails, results_dir, incremental):
                         pass
         except Exception as ex:
             print_error('read', compressor, serializer, ex)
-            read_time = 'ERROR'
+            read_time = ERROR
         else:
             read_time = read_timer.seconds()
 
@@ -109,6 +111,7 @@ def display_benchmarks(results, display_format, buffer=stdout):
         buffer.write('  <style>\n')
         buffer.write('   td { text-align: center; }\n')
         buffer.write('   table { margin-bottom: 1em; }\n')
+        buffer.write('   .error { color: #FF4136; }\n')
         buffer.write('  </style>\n')
         buffer.write(' </head>\n')
         buffer.write(' <body>\n')
@@ -123,6 +126,8 @@ def display_benchmarks(results, display_format, buffer=stdout):
         for result in results:
             buffer.write('    <tr>\n')
             for value in result:
+                if value == ERROR:
+                    value = '<span class="error">{}</span>'.format(value)
                 buffer.write('     <td>{}</td>\n'.format(value))
             buffer.write('    </tr>\n')
         buffer.write('   </tbody>\n')
