@@ -103,7 +103,10 @@ def display_benchmarks(results, display_format, buffer=stdout):
         buffer.write('  <link rel="stylesheet" href="https://unpkg.com/purecss@1.0.0/build/base-min.css">\n')  # noqa: E501
         buffer.write('  <link rel="stylesheet" href="https://unpkg.com/purecss@1.0.0/build/pure-min.css">\n')  # noqa: E501
         buffer.write('  <link rel="stylesheet" href="https://unpkg.com/tablesort@5.1.0/tablesort.css">\n')  # noqa: E501
-        buffer.write('  <style>td { text-align: center; } table { margin-bottom: 1em; }</style>\n')  # noqa: E501
+        buffer.write('  <style>\n')
+        buffer.write('   td { text-align: center; }\n')
+        buffer.write('   table { margin-bottom: 1em; }\n')
+        buffer.write('  </style>\n')
         buffer.write(' </head>\n')
         buffer.write(' <body>\n')
         buffer.write('  <table id="benchmarks" class="pure-table pure-table-horizontal pure-table-striped">\n')  # noqa: E501
