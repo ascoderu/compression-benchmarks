@@ -1,7 +1,7 @@
 from abc import ABC
 from contextlib import contextmanager
 from gzip import open as gzip_open
-from os import stat
+from os import remove
 from tarfile import open as tarfile_open
 from tempfile import NamedTemporaryFile
 from typing import IO
@@ -9,6 +9,7 @@ from typing import Iterable
 
 from zstandard import MAX_COMPRESSION_LEVEL
 from zstandard import ZstdCompressor
+from zstandard import ZstdDecompressor
 
 
 class _Compression(ABC):
@@ -60,10 +61,18 @@ class ZstandardCompression(_Compression):
         fobj = open(path, 'wb')
         return compressor.stream_writer(fobj)
 
+    @contextmanager
     def open_read(self, path: str) -> IO[bytes]:
-        compressor = ZstdCompressor(level=self.level)
-        fobj = open(path, 'rb')
-        return compressor.stream_reader(fobj, size=stat(path).st_size)
+        decompressor = ZstdDecompressor()
+        outfobj = NamedTemporaryFile(delete=False)
+        try:
+            with open(path, 'rb') as infobj:
+                decompressor.copy_stream(infobj, outfobj)
+            with open(outfobj.name, 'rb') as fobj:
+                yield fobj
+        finally:
+            outfobj.close()
+            remove(outfobj.name)
 
 
 class _TarballCompression(_Compression):
