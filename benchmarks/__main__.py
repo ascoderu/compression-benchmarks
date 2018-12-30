@@ -131,6 +131,8 @@ def display_benchmarks(results, display_format, buffer=stdout):
         buffer.write('  <script>new Tablesort(document.getElementById("benchmarks"))</script>\n')  # noqa: E501
         if getenv('TRAVIS_COMMIT') and getenv('TRAVIS_REPO_SLUG'):
             buffer.write('  <a class="pure-button" href="https://github.com/{}/tree/{}">View code</a>\n'.format(getenv('TRAVIS_REPO_SLUG'), getenv('TRAVIS_COMMIT')))  # noqa: E501
+        if getenv('TRAVIS_BUILD_WEB_URL'):
+            buffer.write('  <a class="pure-button" href="{}">View build</a>\n'.format(getenv('TRAVIS_BUILD_WEB_URL')))  # noqa: E501
         buffer.write(' </body>\n')
         buffer.write('</html>\n')
 
