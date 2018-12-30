@@ -7,6 +7,7 @@ from itertools import product
 from os import makedirs
 from os.path import isfile
 from os.path import join
+from sys import stderr
 from sys import stdout
 
 from benchmarks.compression import get_all as all_compressors
@@ -34,7 +35,7 @@ for path in glob(join(args.inputs_dir, '*')):
     sample_emails.append(sample_email)
 
 writer = DictWriter(
-    stdout, ('Compression', 'Serialization', 'Filesize', 'Duration'),
+    stdout, ('Compression', 'Serialization', 'Filesize', 'Runtime'),
     dialect=excel_tab)
 
 writer.writeheader()
@@ -50,7 +51,8 @@ for compressor, serializer in product(all_compressors(), all_serializers()):
     try:
         with compressor.open(outpath) as fobj:
             serializer.serialize(iter(sample_emails), fobj)
-    except Exception:
+    except Exception as ex:
+        print(ex, file=stderr)
         runtime, filesize = 'ERROR', 'ERROR'
     else:
         end = datetime.now()
