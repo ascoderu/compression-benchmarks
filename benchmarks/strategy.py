@@ -8,6 +8,7 @@ from typing import Iterable
 
 import fastavro
 import msgpack
+from zstandard import ZstdCompressor
 
 
 class _Strategy(ABC):
@@ -26,6 +27,14 @@ class _Gzipped(ABC):
     @classmethod
     def _open(cls, path: str) -> IO[bytes]:
         return gzip.open(path, 'wb')
+
+
+class _Zstd(ABC):
+    @classmethod
+    def _open(cls, path: str) -> IO[bytes]:
+        compressor = ZstdCompressor()
+        fobj = open(path, 'wb')
+        return compressor.stream_writer(fobj)
 
 
 class _JsonLinesStrategy(_Strategy, ABC):
@@ -47,6 +56,10 @@ class JsonLinesStrategy(_Uncompressed, _JsonLinesStrategy):
 
 class JsonLinesGzipStrategy(_Gzipped, _JsonLinesStrategy):
     EXTENSION = '.jsonl.gz'
+
+
+class JsonLinesZstdStrategy(_Zstd, _JsonLinesStrategy):
+    EXTENSION = '.jsonl.zs'
 
 
 class _TarballStrategy(JsonLinesStrategy, ABC):
@@ -90,6 +103,10 @@ class MsgpackGzipStrategy(_Gzipped, _MsgpackStrategy):
     EXTENSION = '.msgpack.gz'
 
 
+class MsgpackZstdStrategy(_Zstd, _MsgpackStrategy):
+    EXTENSION = '.msgpack.zs'
+
+
 class _MsgpackHeaderStrategy(_Strategy, ABC):
     @classmethod
     def _write_item(cls, header, item, stream):
@@ -115,6 +132,10 @@ class MsgpackHeaderStrategy(_Uncompressed, _MsgpackHeaderStrategy):
 
 class MsgpackHeaderGzipStrategy(_Gzipped, _MsgpackHeaderStrategy):
     EXTENSION = '.msgpack-header.gz'
+
+
+class MsgpackHeaderZstdStrategy(_Zstd, _MsgpackHeaderStrategy):
+    EXTENSION = '.msgpack-header.zs'
 
 
 class _AvroStrategy(_Strategy, ABC):

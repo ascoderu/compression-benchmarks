@@ -1,3 +1,4 @@
 fastavro==0.21.16
 msgpack==0.5.6
 requests==2.20.1
+zstandard==0.10.2
