@@ -10,5 +10,5 @@ before_script:
   - pip install flake8
 
 script:
-  - flake8 benchmarks/
+  - flake8 benchmarks
   - python3 -m benchmarks.tests
