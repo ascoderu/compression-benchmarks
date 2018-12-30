@@ -1,0 +1,13 @@
+language:
+  python
+
+cache: pip
+
+python:
+  - "3.6"
+
+before_script:
+  - pip install flake8
+
+script:
+  - flake8 benchmarks/
