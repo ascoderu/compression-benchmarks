@@ -14,6 +14,7 @@ from benchmarks.compression import get_all as compressors
 from benchmarks.serialization import get_all as serializers
 from benchmarks.utils import Timer
 from benchmarks.utils import download_sample_emails
+from benchmarks.utils import remove_if_exists
 from benchmarks.utils import filesize_kb
 from benchmarks.utils import load_sample_email
 from benchmarks.utils import pretty_extension
@@ -89,6 +90,9 @@ def run_benchmarks(emails, results_dir, incremental):
             WriteTimeSeconds=write_time,
             ReadTimeSeconds=read_time,
         )
+
+        if not incremental:
+            remove_if_exists(outpath)
 
 
 def display_benchmarks(results, display_format, buffer=stdout):

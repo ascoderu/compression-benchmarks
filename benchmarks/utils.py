@@ -62,6 +62,13 @@ def filesize_kb(path: str) -> float:
     return stat(path).st_size / 1024
 
 
+def remove_if_exists(path):
+    try:
+        remove(path)
+    except FileNotFoundError:
+        pass
+
+
 def load_sample_email(path: str) -> dict:
     with gzip_open(path, 'r') as fobj:
         raw_sample_email = fobj.read().decode('utf-8')
