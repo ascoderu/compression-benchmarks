@@ -1,6 +1,7 @@
 # project-specific
 results/
 sample-emails/
+*.psv
 
 # editors
 .vscode/
