@@ -11,12 +11,18 @@ parser = ArgumentParser()
 parser.add_argument('emails_zip_url')
 parser.add_argument('--results_dir', default='results')
 parser.add_argument('--inputs_dir', default='sample-emails')
+parser.add_argument('--exclude_attachments', action='store_true')
 args = parser.parse_args()
 
 download_sample_emails(args.emails_zip_url, args.inputs_dir)
 makedirs(args.results_dir, exist_ok=True)
 
-sample_emails = [load_sample_email(path) for path in glob(join(args.inputs_dir, '*'))]
+sample_emails = []
+for path in glob(join(args.inputs_dir, '*')):
+    sample_email = load_sample_email(path)
+    if args.exclude_attachments:
+        sample_email.pop('attachments', None)
+    sample_emails.append(sample_email)
 
 writer = DictWriter(stdout, ('Strategy', 'Filesize', 'Duration'), dialect=excel_tab)
 writer.writeheader()
