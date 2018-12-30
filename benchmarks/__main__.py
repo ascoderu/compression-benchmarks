@@ -1,17 +1,19 @@
 from argparse import ArgumentParser
 from csv import DictWriter
 from csv import excel_tab
+from datetime import datetime
 from glob import glob
+from itertools import product
 from os import makedirs
 from os.path import isfile
 from os.path import join
 from sys import stdout
 
+from benchmarks.compression import get_all as all_compressors
+from benchmarks.serialization import get_all as all_serializers
 from benchmarks.utils import download_sample_emails
-from benchmarks.utils import filesize
-from benchmarks.utils import get_strategies
+from benchmarks.utils import filesize_kb
 from benchmarks.utils import load_sample_email
-from benchmarks.utils import timer
 
 parser = ArgumentParser()
 parser.add_argument('emails_zip_url')
@@ -31,20 +33,33 @@ for path in glob(join(args.inputs_dir, '*')):
         sample_email.pop('attachments', None)
     sample_emails.append(sample_email)
 
-writer = DictWriter(stdout, ('Strategy', 'Filesize', 'Duration'),
-                    dialect=excel_tab)
+writer = DictWriter(
+    stdout, ('Compression', 'Serialization', 'Filesize', 'Duration'),
+    dialect=excel_tab)
+
 writer.writeheader()
 
-for strategy_name, strategy in get_strategies():
-    compressed_path = join(args.results_dir, 'result' + strategy.EXTENSION)
-    if args.incremental and isfile(compressed_path):
+for compressor, serializer in product(all_compressors(), all_serializers()):
+    outpath = join(args.results_dir, 'emails{}{}'.format(
+        compressor.extension, serializer.extension))
+
+    if args.incremental and isfile(outpath):
         continue
 
-    duration = timer(lambda: strategy.compress(
-        iter(sample_emails), compressed_path))
+    start = datetime.now()
+    try:
+        with compressor.open(outpath) as fobj:
+            serializer.serialize(iter(sample_emails), fobj)
+    except Exception:
+        runtime, filesize = 'ERROR', 'ERROR'
+    else:
+        end = datetime.now()
+        runtime = '{:.4f} s'.format((end - start).total_seconds())
+        filesize = '{:.2f} kb'.format(filesize_kb(outpath))
 
     writer.writerow({
-        'Strategy': strategy.EXTENSION.lstrip('.'),
-        'Filesize': filesize(compressed_path),
-        'Duration': duration,
+        'Compression': compressor.extension.lstrip('.') or '(none)',
+        'Serialization': serializer.extension.lstrip('.') or '(none)',
+        'Filesize': filesize,
+        'Runtime': runtime,
     })
