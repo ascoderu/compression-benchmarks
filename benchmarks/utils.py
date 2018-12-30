@@ -66,3 +66,7 @@ def load_sample_email(path: str) -> dict:
     with gzip_open(path, 'r') as fobj:
         raw_sample_email = fobj.read().decode('utf-8')
         return loads(raw_sample_email)
+
+
+def pretty_extension(ext):
+    return ext.lstrip('.') or '(none)'

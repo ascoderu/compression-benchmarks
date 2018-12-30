@@ -15,6 +15,7 @@ from benchmarks.utils import Timer
 from benchmarks.utils import download_sample_emails
 from benchmarks.utils import filesize_kb
 from benchmarks.utils import load_sample_email
+from benchmarks.utils import pretty_extension
 
 Benchmark = namedtuple('Benchmark', (
     'Compressor',
@@ -36,6 +37,15 @@ def load_samples(zip_url, inputs_dir, exclude_attachments):
     return sample_emails
 
 
+def print_error(stage, compressor, serializer, ex):
+    print('Error during {}-phase in {}+{}: {}'.format(
+        stage,
+        pretty_extension(compressor.extension),
+        pretty_extension(serializer.extension),
+        ex,
+    ), file=stderr)
+
+
 def run_benchmarks(emails, results_dir, incremental):
     makedirs(results_dir, exist_ok=True)
 
@@ -51,7 +61,7 @@ def run_benchmarks(emails, results_dir, incremental):
                 with compressor.open_write(outpath) as fobj:
                     serializer.serialize(iter(emails), fobj)
         except Exception as ex:
-            print(ex, file=stderr)
+            print_error('write', compressor, serializer, ex)
             write_time = 'ERROR'
             filesize = 'ERROR'
         else:
@@ -64,14 +74,14 @@ def run_benchmarks(emails, results_dir, incremental):
                     for _ in serializer.deserialize(fobj):
                         pass
         except Exception as ex:
-            print(ex, file=stderr)
+            print_error('read', compressor, serializer, ex)
             read_time = 'ERROR'
         else:
             read_time = read_timer.seconds()
 
         yield Benchmark(
-            Compressor=compressor.extension.lstrip('.') or '(none)',
-            Serializer=serializer.extension.lstrip('.') or '(none)',
+            Compressor=pretty_extension(compressor.extension),
+            Serializer=pretty_extension(serializer.extension),
             FileSize=filesize,
             WriteTime=write_time,
             ReadTime=read_time,
