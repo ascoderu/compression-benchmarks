@@ -14,7 +14,8 @@ script:
   - python3 -m benchmarks.tests
 
 before_deploy:
-  - mkdir html && python3 -m benchmarks --display_format=html $EMAILS_ZIP_URL > html/index.html
+  - mkdir -p html
+  - python3 -u -m benchmarks --display_format=html $EMAILS_ZIP_URL | tee html/index.html
 
 deploy:
   provider: pages
