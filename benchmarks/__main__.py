@@ -27,7 +27,13 @@ Benchmark = namedtuple('Benchmark', (
     'ReadTimeSeconds',
 ))
 
-ERROR = 'ERROR'
+
+class BenchmarkError:
+    def __init__(self, ex):
+        self.ex = ex
+
+    def __str__(self):
+        return 'ERROR'
 
 
 def load_samples(zip_url, inputs_dir, exclude_attachments):
@@ -66,8 +72,8 @@ def run_benchmarks(emails, results_dir, incremental):
                     serializer.serialize(iter(emails), fobj)
         except Exception as ex:
             print_error('write', compressor, serializer, ex)
-            write_time = ERROR
-            filesize = ERROR
+            write_time = BenchmarkError(ex)
+            filesize = BenchmarkError(ex)
         else:
             write_time = write_timer.seconds()
             filesize = '{:.2f}'.format(filesize_kb(outpath))
@@ -79,7 +85,7 @@ def run_benchmarks(emails, results_dir, incremental):
                         pass
         except Exception as ex:
             print_error('read', compressor, serializer, ex)
-            read_time = ERROR
+            read_time = BenchmarkError(ex)
         else:
             read_time = read_timer.seconds()
 
@@ -123,16 +129,21 @@ def display_benchmarks(results, display_format, buffer=stdout):
         buffer.write('   <thead>\n')
         buffer.write('    <tr>\n')
         for field in Benchmark._fields:
-            buffer.write('     <th>{}</th>\n'.format(field))
+            thclass = ''
+            if field.endswith('Kb') or field.endswith('Seconds'):
+                thclass = ' data-sort-method="number"'
+            buffer.write('     <th{}>{}</th>\n'.format(thclass, field))
         buffer.write('    </tr>\n')
         buffer.write('   </thead>\n')
         buffer.write('   <tbody>\n')
         for result in results:
             buffer.write('    <tr>\n')
             for value in result:
-                if value == ERROR:
-                    value = '<span class="error">{}</span>'.format(value)
-                buffer.write('     <td>{}</td>\n'.format(value))
+                tdclass = ''
+                if isinstance(value, BenchmarkError):
+                    value = '<span class="error" title="{}">{}</span>'.format(value, value.ex)  # noqa: E501
+                    tdclass = ' data-sort="999999"'
+                buffer.write('     <td{}>{}</td>\n'.format(tdclass, value))
             buffer.write('    </tr>\n')
         buffer.write('   </tbody>\n')
         buffer.write('  </table>\n')
