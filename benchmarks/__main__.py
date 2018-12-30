@@ -25,7 +25,7 @@ for strategy_name, strategy in get_strategies():
     compressed_path = join(args.results_dir, 'result' + strategy.EXTENSION)
     duration = timer(lambda: strategy.compress(sample_emails, compressed_path))
 
-    table.append((strategy.EXTENSION, filesize(compressed_path), duration))
+    table.append((strategy.EXTENSION.lstrip('.'), filesize(compressed_path), duration))
 
 print(Fore.YELLOW, table.title)
 print(Fore.GREEN, table.export('df'))
