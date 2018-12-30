@@ -88,6 +88,13 @@ def run_benchmarks(emails, results_dir, incremental):
         )
 
 
+def display_benchmarks(results):
+    writer = DictWriter(stdout, Benchmark._fields, dialect=excel_tab)
+    writer.writeheader()
+    for result in results:
+        writer.writerow(result._asdict())
+
+
 def cli():
     from argparse import ArgumentParser
 
@@ -102,10 +109,9 @@ def cli():
     emails = load_samples(args.emails_zip_url, args.inputs_dir,
                           args.exclude_attachments)
 
-    writer = DictWriter(stdout, Benchmark._fields, dialect=excel_tab)
-    writer.writeheader()
-    for run in run_benchmarks(emails, args.results_dir, args.incremental):
-        writer.writerow(run._asdict())
+    results = run_benchmarks(emails, args.results_dir, args.incremental)
+
+    display_benchmarks(results)
 
 
 if __name__ == '__main__':
