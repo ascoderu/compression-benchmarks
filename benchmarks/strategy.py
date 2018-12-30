@@ -90,6 +90,33 @@ class MsgpackGzipStrategy(_Gzipped, _MsgpackStrategy):
     EXTENSION = '.msgpack.gz'
 
 
+class _MsgpackHeaderStrategy(_Strategy, ABC):
+    @classmethod
+    def _write_item(cls, header, item, stream):
+        record = [item.get(column) for column in header]
+        stream.write(msgpack.packb(record, use_bin_type=True))
+
+    @classmethod
+    def compress(cls, contents: Iterable[dict], compressed_filename: str) -> None:
+        contents = iter(contents)
+        with cls._open(compressed_filename) as compressed_file:
+            first = next(contents)
+            header = sorted(first.keys())
+            compressed_file.write(','.join(header).encode('utf-8'))
+            compressed_file.write(b'\n')
+            cls._write_item(header, first, compressed_file)
+            for content in contents:
+                cls._write_item(header, content, compressed_file)
+
+
+class MsgpackHeaderStrategy(_Uncompressed, _MsgpackHeaderStrategy):
+    EXTENSION = '.msgpack-header'
+
+
+class MsgpackHeaderGzipStrategy(_Gzipped, _MsgpackHeaderStrategy):
+    EXTENSION = '.msgpack-header.gz'
+
+
 class _AvroStrategy(_Strategy, ABC):
     _schema = fastavro.parse_schema({
         "type": "record",
