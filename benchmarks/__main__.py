@@ -1,7 +1,9 @@
 from argparse import ArgumentParser
+from csv import DictWriter, excel_tab
 from glob import glob
 from os import makedirs
 from os.path import join
+from sys import stdout
 
 from benchmarks.utils import filesize, load_sample_email, timer, get_strategies, download_sample_emails
 
@@ -16,10 +18,15 @@ makedirs(args.results_dir, exist_ok=True)
 
 sample_emails = [load_sample_email(path) for path in glob(join(args.inputs_dir, '*'))]
 
-print('\t'.join(('Strategy', 'Filesize', 'Duration')))
+writer = DictWriter(stdout, ('Strategy', 'Filesize', 'Duration'), dialect=excel_tab)
+writer.writeheader()
 
 for strategy_name, strategy in get_strategies():
     compressed_path = join(args.results_dir, 'result' + strategy.EXTENSION)
     duration = timer(lambda: strategy.compress(iter(sample_emails), compressed_path))
 
-    print('\t'.join((strategy.EXTENSION.lstrip('.'), filesize(compressed_path), duration)))
+    writer.writerow({
+        'Strategy': strategy.EXTENSION.lstrip('.'),
+        'Filesize': filesize(compressed_path),
+        'Duration': duration,
+    })
