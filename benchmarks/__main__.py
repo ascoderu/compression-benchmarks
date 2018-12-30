@@ -3,6 +3,7 @@ from csv import DictWriter
 from csv import excel_tab
 from glob import glob
 from itertools import product
+from os import getenv
 from os import makedirs
 from os.path import isfile
 from os.path import join
@@ -98,11 +99,11 @@ def display_benchmarks(results, display_format, buffer=stdout):
     elif display_format == 'html':
         buffer.write('<html>\n')
         buffer.write(' <head>\n')
-        buffer.write('  <title>Ascoderu compression benchmark results</title>\n')
+        buffer.write('  <title>Ascoderu compression benchmark results</title>\n')  # noqa: E501
         buffer.write('  <link rel="stylesheet" href="https://unpkg.com/purecss@1.0.0/build/base-min.css">\n')  # noqa: E501
         buffer.write('  <link rel="stylesheet" href="https://unpkg.com/purecss@1.0.0/build/pure-min.css">\n')  # noqa: E501
         buffer.write('  <link rel="stylesheet" href="https://unpkg.com/tablesort@5.1.0/tablesort.css">\n')  # noqa: E501
-        buffer.write('  <style>td { text-align: center; }</style>\n')
+        buffer.write('  <style>td { text-align: center; } table { margin-bottom: 1em; }</style>\n')  # noqa: E501
         buffer.write(' </head>\n')
         buffer.write(' <body>\n')
         buffer.write('  <table id="benchmarks" class="pure-table pure-table-horizontal pure-table-striped">\n')  # noqa: E501
@@ -122,6 +123,8 @@ def display_benchmarks(results, display_format, buffer=stdout):
         buffer.write('  </table>\n')
         buffer.write('  <script src="https://unpkg.com/tablesort@5.1.0/dist/tablesort.min.js"></script>\n')  # noqa: E501
         buffer.write('  <script>new Tablesort(document.getElementById("benchmarks"))</script>\n')  # noqa: E501
+        if getenv('TRAVIS_COMMIT') and getenv('TRAVIS_REPO_SLUG'):
+            buffer.write('  <a class="pure-button" href="https://github.com/{}/tree/{}">View code</a>\n'.format(getenv('TRAVIS_REPO_SLUG'), getenv('TRAVIS_COMMIT')))  # noqa: E501
         buffer.write(' </body>\n')
         buffer.write('</html>\n')
 
