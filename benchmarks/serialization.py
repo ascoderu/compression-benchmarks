@@ -100,7 +100,8 @@ class AvroSerialization(_Serialization):
     @classmethod
     def deserialize(cls, fobj: IO[bytes]) -> Iterable[dict]:
         for obj in avro_reader(fobj):
-            yield obj
+            yield {key: value for (key, value) in obj.items()
+                   if value is not None}
 
 
 def get_all() -> Iterable[_Serialization]:
