@@ -8,7 +8,7 @@ python:
 
 before_script:
   - pip install flake8
-  - python3 -m benchmarks.tests
 
 script:
   - flake8 benchmarks/
+  - python3 -m benchmarks.tests
