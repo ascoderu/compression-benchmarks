@@ -1,12 +1,16 @@
-# compression-benchies
+# compression-benchmarks
 
-Compression benchmarks for ascoderu
+## What's this?
 
-Setup the requirements with `pip install -r requirements.txt`
+Benchmarks for the Lokole [email data exchange protocol](https://github.com/ascoderu/opwen-cloudserver#data-exchange-format).
 
-Run `python3 -m benchmarks <emails-zip-url>`
+## Setup
 
-Results:
+Install the requirements with `pip install -r requirements.txt`.
+
+Run the benchmarks via `python3 -m benchmarks <emails-zip-url>`.
+
+## Results
 
 | Strategy          | Filesize     | Duration   |
 | ----------------- | ------------ | ---------- |
