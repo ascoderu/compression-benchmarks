@@ -2,6 +2,7 @@
 results/
 sample-emails/
 *.psv
+*.html
 
 # editors
 .vscode/

@@ -25,7 +25,7 @@ class Timer:
         self._stop = datetime.now()
 
     def seconds(self) -> str:
-        return '{:.4f} s'.format((self._stop - self._start).total_seconds())
+        return '{:.4f}'.format((self._stop - self._start).total_seconds())
 
     @classmethod
     @contextmanager

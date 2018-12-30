@@ -20,9 +20,9 @@ from benchmarks.utils import pretty_extension
 Benchmark = namedtuple('Benchmark', (
     'Compressor',
     'Serializer',
-    'FileSize',
-    'WriteTime',
-    'ReadTime',
+    'FilesizeKb',
+    'WriteTimeSeconds',
+    'ReadTimeSeconds',
 ))
 
 
@@ -66,7 +66,7 @@ def run_benchmarks(emails, results_dir, incremental):
             filesize = 'ERROR'
         else:
             write_time = write_timer.seconds()
-            filesize = '{:.2f} kb'.format(filesize_kb(outpath))
+            filesize = '{:.2f}'.format(filesize_kb(outpath))
 
         try:
             with Timer.timeit() as read_timer:
@@ -82,17 +82,50 @@ def run_benchmarks(emails, results_dir, incremental):
         yield Benchmark(
             Compressor=pretty_extension(compressor.extension),
             Serializer=pretty_extension(serializer.extension),
-            FileSize=filesize,
-            WriteTime=write_time,
-            ReadTime=read_time,
+            FilesizeKb=filesize,
+            WriteTimeSeconds=write_time,
+            ReadTimeSeconds=read_time,
         )
 
 
-def display_benchmarks(results):
-    writer = DictWriter(stdout, Benchmark._fields, dialect=excel_tab)
-    writer.writeheader()
-    for result in results:
-        writer.writerow(result._asdict())
+def display_benchmarks(results, display_format, buffer=stdout):
+    if display_format == 'csv':
+        writer = DictWriter(buffer, Benchmark._fields, dialect=excel_tab)
+        writer.writeheader()
+        for result in results:
+            writer.writerow(result._asdict())
+
+    elif display_format == 'html':
+        buffer.write('<html>\n')
+        buffer.write(' <head>\n')
+        buffer.write('  <link rel="stylesheet" href="https://unpkg.com/purecss@1.0.0/build/base-min.css">\n')  # noqa: E501
+        buffer.write('  <link rel="stylesheet" href="https://unpkg.com/purecss@1.0.0/build/pure-min.css">\n')  # noqa: E501
+        buffer.write('  <link rel="stylesheet" href="https://unpkg.com/tablesort@5.1.0/tablesort.css"></script>\n')  # noqa: E501
+        buffer.write('  <style>td { text-align: center; }</style>\n')
+        buffer.write(' </head>\n')
+        buffer.write(' <body>\n')
+        buffer.write('  <table id="benchmarks" class="pure-table pure-table-horizontal pure-table-striped">\n')  # noqa: E501
+        buffer.write('   <thead>\n')
+        buffer.write('    <tr>\n')
+        for field in Benchmark._fields:
+            buffer.write('     <th>{}</th>\n'.format(field))
+        buffer.write('    </tr>\n')
+        buffer.write('   </thead>\n')
+        buffer.write('   <tbody>\n')
+        for result in results:
+            buffer.write('    <tr>\n')
+            for value in result:
+                buffer.write('     <td>{}</td>\n'.format(value))
+            buffer.write('    </tr>\n')
+        buffer.write('   </tbody>\n')
+        buffer.write('  </table>\n')
+        buffer.write('  <script src="https://unpkg.com/tablesort@5.1.0/dist/tablesort.min.js"></script>\n')  # noqa: E501
+        buffer.write('  <script>new Tablesort(document.getElementById("benchmarks"))</script>\n')  # noqa: E501
+        buffer.write(' </body>\n')
+        buffer.write('</html>\n')
+
+    else:
+        raise NotImplementedError(display_format)
 
 
 def cli():
@@ -104,6 +137,7 @@ def cli():
     parser.add_argument('--inputs_dir', default='sample-emails')
     parser.add_argument('--exclude_attachments', action='store_true')
     parser.add_argument('--incremental', action='store_true')
+    parser.add_argument('--display_format', default='csv')
     args = parser.parse_args()
 
     emails = load_samples(args.emails_zip_url, args.inputs_dir,
@@ -111,7 +145,7 @@ def cli():
 
     results = run_benchmarks(emails, args.results_dir, args.incremental)
 
-    display_benchmarks(results)
+    display_benchmarks(results, args.display_format)
 
 
 if __name__ == '__main__':
