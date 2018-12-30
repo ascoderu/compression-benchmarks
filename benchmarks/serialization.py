@@ -4,6 +4,7 @@ from json import loads
 from typing import IO
 from typing import Iterable
 
+from bson import BSON
 from fastavro import parse_schema as avro_parse_schema
 from fastavro import reader as avro_reader
 from fastavro import writer as avro_writer
@@ -39,6 +40,22 @@ class JsonLinesSerialization(_Serialization):
     def deserialize(cls, fobj: IO[bytes]) -> Iterable[dict]:
         for line in fobj:
             yield loads(line.decode(cls.encoding))
+
+
+class BsonLinesSerialization(_Serialization):
+    extension = '.bsonl'
+
+    @classmethod
+    def serialize(cls, objs: Iterable[dict], fobj: IO[bytes]):
+        for obj in objs:
+            fobj.write(BSON.encode(obj))
+            fobj.write(b'\n')
+
+    @classmethod
+    def deserialize(cls, fobj: IO[bytes]) -> Iterable[dict]:
+        for line in fobj:
+            # noinspection PyCallByClass,PyTypeChecker
+            yield BSON.decode(line.rstrip(b'\n'))
 
 
 class MsgpackSerialization(_Serialization):
@@ -107,6 +124,7 @@ class AvroSerialization(_Serialization):
 def get_all() -> Iterable[_Serialization]:
     return (
         JsonLinesSerialization(),
+        BsonLinesSerialization(),
         MsgpackSerialization(),
         AvroSerialization(),
     )
