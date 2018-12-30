@@ -12,20 +12,23 @@ Run the benchmarks via `python3 -m benchmarks <emails-zip-url>`.
 
 ## Results
 
-| Strategy          | Filesize     | Duration   |
-| ----------------- | ------------ | ---------- |
-| avro              | 171293.62 kb |  0.4421 s  |
-| avro.gz           | 126415.51 kb |  6.3902 s  |
-| jsonl             | 171606.69 kb |  0.4845 s  |
-| jsonl.gz          | 126402.74 kb |  6.0208 s  |
-| jsonl.zs          | 121547.86 kb |  0.9676 s  |
-| jsonl.22.zs       |  66953.92 kb | 39.0648 s  |
-| msgpack           | 171298.67 kb |  0.0907 s  |
-| msgpack-header    | 171288.35 kb |  0.0792 s  |
-| msgpack-header.gz | 126410.49 kb |  5.7391 s  |
-| msgpack-header.zs | 121870.88 kb |  0.9203 s  |
-| msgpack.gz        | 126419.45 kb |  5.9043 s  |
-| msgpack.zs        | 121930.07 kb |  0.5857 s  |
-| tar.bz2           | 124601.20 kb | 18.5556 s  |
-| tar.gz            | 126402.65 kb |  8.1514 s  |
-| tar.xz            | 112513.03 kb | 71.7144 s  |
+| Compression | Serialization | Filesize | Runtime |
+| ----------- | ------------- | -------- | ------- |
+| (none) | jsonl | 171606.69 kb | 0.5273 s |
+| (none) | msgpack | 171298.67 kb | 0.5399 s |
+| (none) | avro | 171293.62 kb | 0.1048 s |
+| gz | jsonl | 126402.64 kb | 6.0698 s |
+| gz | msgpack | 126419.29 kb | 5.8244 s |
+| gz | avro | 126414.96 kb | 5.6908 s |
+| 3.zs | jsonl | 121544.14 kb | 0.9095 s |
+| 3.zs | msgpack | 121875.38 kb | 0.5148 s |
+| 3.zs | avro | ERROR | ERROR |
+| 22.zs | jsonl | 66752.08 kb | 37.6623 s |
+| 22.zs | msgpack | 66617.84 kb | 36.8547 s |
+| 22.zs | avro | ERROR | ERROR |
+| tar.bz2 | jsonl | 124604.32 kb | 18.7284 s |
+| tar.bz2 | msgpack | 124546.63 kb | 17.5692 s |
+| tar.bz2 | avro | 124533.31 kb | 17.7366 s |
+| tar.xz | jsonl | 112513.34 kb | 70.5483 s |
+| tar.xz | msgpack | 112506.42 kb | 70.1478 s |
+| tar.xz | avro | 112503.61 kb | 70.7673 s |
