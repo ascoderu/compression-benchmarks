@@ -8,7 +8,7 @@ Benchmarks for the Lokole [email data exchange protocol](https://github.com/asco
 
 Install the requirements with `pip install -r requirements.txt`.
 
-Run the benchmarks via `python3 -m benchmarks <emails-zip-url>`.
+Run the benchmarks via `python3 -u -m benchmarks <emails-zip-url>`.
 
 ## Results
 
