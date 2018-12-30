@@ -8,7 +8,7 @@ from typing import Iterable
 
 import fastavro
 import msgpack
-from zstandard import ZstdCompressor
+from zstandard import ZstdCompressor, MAX_COMPRESSION_LEVEL
 
 
 class _Strategy(ABC):
@@ -30,9 +30,11 @@ class _Gzipped(ABC):
 
 
 class _Zstd(ABC):
+    _LEVEL = 3
+
     @classmethod
     def _open(cls, path: str) -> IO[bytes]:
-        compressor = ZstdCompressor()
+        compressor = ZstdCompressor(level=cls._LEVEL)
         fobj = open(path, 'wb')
         return compressor.stream_writer(fobj)
 
@@ -60,6 +62,11 @@ class JsonLinesGzipStrategy(_Gzipped, _JsonLinesStrategy):
 
 class JsonLinesZstdStrategy(_Zstd, _JsonLinesStrategy):
     EXTENSION = '.jsonl.zs'
+
+
+class JsonLinesZstdMaxStrategy(_Zstd, _JsonLinesStrategy):
+    _LEVEL = MAX_COMPRESSION_LEVEL
+    EXTENSION = '.jsonl.{}.zs'.format(_LEVEL)
 
 
 class _TarballStrategy(JsonLinesStrategy, ABC):

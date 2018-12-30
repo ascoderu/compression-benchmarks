@@ -15,6 +15,7 @@ Results:
 | jsonl             | 171606.69 kb |  0.4845 s  |
 | jsonl.gz          | 126402.74 kb |  6.0208 s  |
 | jsonl.zs          | 121547.86 kb |  0.9676 s  |
+| jsonl.22.zs       |  66953.92 kb | 39.0648 s  |
 | msgpack           | 171298.67 kb |  0.0907 s  |
 | msgpack-header    | 171288.35 kb |  0.0792 s  |
 | msgpack-header.gz | 126410.49 kb |  5.7391 s  |
