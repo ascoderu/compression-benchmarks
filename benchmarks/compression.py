@@ -73,8 +73,8 @@ class ZstandardCompression(_Compression):
         try:
             with open(path, 'rb') as infobj:
                 decompressor.copy_stream(infobj, outfobj)
-            with open(outfobj.name, 'rb') as fobj:
-                yield fobj
+            outfobj.seek(0)
+            yield outfobj
         finally:
             outfobj.close()
             remove(outfobj.name)
