@@ -89,8 +89,9 @@ class _TarballCompression(_Compression):
     @contextmanager
     def open_read(self, path: str) -> IO[bytes]:
         mode = 'r|{}'.format(self.compression)
-        fobj = None
-        with tarfile_open(path, mode) as archive:
+        archive = tarfile_open(path, mode)
+        try:
+            fobj = None
             while True:
                 member = archive.next()
                 if member is None:
@@ -98,10 +99,15 @@ class _TarballCompression(_Compression):
                 if member.name == self.filename:
                     fobj = archive.extractfile(member)
                     break
-        if fobj is None:
-            raise FileNotFoundError('{} not found in {}'
-                                    .format(self.filename, path))
-        yield fobj
+            if fobj is None:
+                raise FileNotFoundError('{} not found in {}'
+                                        .format(self.filename, path))
+            try:
+                yield fobj
+            finally:
+                fobj.close()
+        finally:
+            archive.close()
 
 
 class Bz2TarballCompression(_TarballCompression):
