@@ -12,23 +12,23 @@ Run the benchmarks via `python3 -u -m benchmarks <emails-zip-url>`.
 
 ## Results
 
-| Compression | Serialization | Filesize | Runtime |
-| ----------- | ------------- | -------- | ------- |
-| (none) | jsonl | 171606.69 kb | 0.5273 s |
-| (none) | msgpack | 171298.67 kb | 0.5399 s |
-| (none) | avro | 171293.62 kb | 0.1048 s |
-| gz | jsonl | 126402.64 kb | 6.0698 s |
-| gz | msgpack | 126419.29 kb | 5.8244 s |
-| gz | avro | 126414.96 kb | 5.6908 s |
-| 3.zs | jsonl | 121544.14 kb | 0.9095 s |
-| 3.zs | msgpack | 121875.38 kb | 0.5148 s |
-| 3.zs | avro | ERROR | ERROR |
-| 22.zs | jsonl | 66752.08 kb | 37.6623 s |
-| 22.zs | msgpack | 66617.84 kb | 36.8547 s |
-| 22.zs | avro | ERROR | ERROR |
-| tar.bz2 | jsonl | 124604.32 kb | 18.7284 s |
-| tar.bz2 | msgpack | 124546.63 kb | 17.5692 s |
-| tar.bz2 | avro | 124533.31 kb | 17.7366 s |
-| tar.xz | jsonl | 112513.34 kb | 70.5483 s |
-| tar.xz | msgpack | 112506.42 kb | 70.1478 s |
-| tar.xz | avro | 112503.61 kb | 70.7673 s |
+| Compressor | Serializer | FileSize | WriteTime | ReadTime |
+| ---------- | ---------- | -------- | --------- | -------- |
+| (none) | jsonl | 171606.69 kb | 1.2122 s | 1.8828 s |
+| (none) | msgpack | 171298.67 kb | 1.0946 s | 0.1485 s |
+| (none) | avro | 171293.62 kb | 0.2137 s | 0.3518 s |
+| gz | jsonl | 126402.96 kb | 13.2107 s | 3.6551 s |
+| gz | msgpack | 126419.39 kb | 12.9293 s | 3.0305 s |
+| gz | avro | 126416.06 kb | 13.5892 s | 3.1989 s |
+| 3.zs | jsonl | 121565.40 kb | 2.1617 s | 5.8393 s |
+| 3.zs | msgpack | 121848.00 kb | 1.1587 s | 2.4740 s |
+| 3.zs | avro | ERROR | ERROR | ERROR |
+| 22.zs | jsonl | 66531.39 kb | 45.8304 s | ERROR |
+| 22.zs | msgpack | 66636.81 kb | 36.8645 s | 0.5559 s |
+| 22.zs | avro | ERROR | ERROR | ERROR |
+| tar.bz2 | jsonl | 124605.93 kb | 18.7358 s | 9.9951 s |
+| tar.bz2 | msgpack | 124540.57 kb | 17.6111 s | 9.3050 s |
+| tar.bz2 | avro | 124531.46 kb | 17.6761 s | 9.3536 s |
+| tar.xz | jsonl | 112511.23 kb | 70.6419 s | 8.8058 s |
+| tar.xz | msgpack | 112503.52 kb | 71.2753 s | 7.9134 s |
+| tar.xz | avro | 112500.46 kb | 69.0527 s | 7.9861 s |
