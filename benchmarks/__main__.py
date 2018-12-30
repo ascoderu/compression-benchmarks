@@ -41,7 +41,7 @@ def run_benchmarks(emails, results_dir, incremental):
 
     for compressor, serializer in product(all_compressors(), all_serializers()):
         outpath = join(results_dir, 'emails{}{}'.format(
-            compressor.extension, serializer.extension))
+            serializer.extension, compressor.extension))
 
         if incremental and isfile(outpath):
             continue
