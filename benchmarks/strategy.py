@@ -4,8 +4,8 @@ from os.path import dirname, join
 
 import avro.schema
 import msgpack
-from avro.datafile import DataFileReader, DataFileWriter
-from avro.io import DatumReader, DatumWriter
+from avro.datafile import DataFileWriter
+from avro.io import DatumWriter
 from bson import BSON
 
 
@@ -21,11 +21,6 @@ class NoCompressionStrategy:
         with open(compressed_filename, 'w') as compressed_file:
             compressed_file.write(to_json(contents))
 
-    @staticmethod
-    def decompress(compressed_filename: str) -> dict:
-        with open(compressed_filename, 'r') as compressed_file:
-            return json.load(compressed_file)
-
 
 class GzipStrategy:
     EXTENSION = '.json.gz'
@@ -34,11 +29,6 @@ class GzipStrategy:
     def compress(contents: dict, compressed_filename: str) -> None:
         with gzip.open(compressed_filename, 'wb') as compressed_file:
             compressed_file.write(to_json(contents).encode('utf-8'))
-
-    @staticmethod
-    def decompress(compressed_filename: str) -> dict:
-        with gzip.open(compressed_filename, 'rb') as fobj:
-            return json.loads(fobj.read().decode('utf-8'))
 
 
 class MsgpackStrategy:
@@ -49,11 +39,6 @@ class MsgpackStrategy:
         with open(compressed_filename, 'wb') as compressed_file:
             compressed_file.write(msgpack.packb(contents))
 
-    @staticmethod
-    def decompress(compressed_filename: str) -> dict:
-        with open(compressed_filename, 'rb') as compressed_file:
-            return msgpack.unpack(compressed_file)
-
 
 class BsonStrategy:
     EXTENSION = '.bson'
@@ -62,12 +47,6 @@ class BsonStrategy:
     def compress(contents: dict, compressed_filename: str) -> None:
         with open(compressed_filename, 'wb') as compressed_file:
             compressed_file.write(BSON.encode(contents))
-
-    @staticmethod
-    def decompress(compressed_filename: str) -> dict:
-        with open(compressed_filename, 'rb') as compressed_file:
-            compressed = BSON(compressed_file.read())
-            return dict(compressed.decode())
 
 
 class AvroStrategy:
@@ -82,9 +61,3 @@ class AvroStrategy:
             writer = DataFileWriter(compressed_file, DatumWriter(), schema)
             writer.append(contents)
             writer.close()
-
-    @staticmethod
-    def decompress(compressed_filename: str) -> DataFileReader:
-        with open(compressed_filename, 'rb') as fobj:
-            reader = DataFileReader(fobj, DatumReader())
-            return reader
