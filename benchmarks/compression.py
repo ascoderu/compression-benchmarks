@@ -81,9 +81,11 @@ class XzTarballCompression(_TarballCompression):
 
 
 def get_all() -> Iterable[_Compression]:
-    yield NoCompression()
-    yield GzipCompression()
-    yield ZstandardCompression()
-    yield ZstandardCompression(level=MAX_COMPRESSION_LEVEL)
-    yield Bz2TarballCompression()
-    yield XzTarballCompression()
+    return (
+        NoCompression(),
+        GzipCompression(),
+        ZstandardCompression(),
+        ZstandardCompression(level=MAX_COMPRESSION_LEVEL),
+        Bz2TarballCompression(),
+        XzTarballCompression(),
+    )

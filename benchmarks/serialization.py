@@ -101,6 +101,8 @@ class AvroSerialization(_Serialization):
 
 
 def get_all() -> Iterable[_Serialization]:
-    yield JsonLinesSerialization()
-    yield MsgpackSerialization()
-    yield AvroSerialization()
+    return (
+        JsonLinesSerialization(),
+        MsgpackSerialization(),
+        AvroSerialization(),
+    )
