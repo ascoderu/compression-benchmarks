@@ -9,8 +9,8 @@ from os.path import join
 from sys import stderr
 from sys import stdout
 
-from benchmarks.compression import get_all as all_compressors
-from benchmarks.serialization import get_all as all_serializers
+from benchmarks.compression import get_all as compressors
+from benchmarks.serialization import get_all as serializers
 from benchmarks.utils import Timer
 from benchmarks.utils import download_sample_emails
 from benchmarks.utils import filesize_kb
@@ -39,7 +39,7 @@ def load_samples(zip_url, inputs_dir, exclude_attachments):
 def run_benchmarks(emails, results_dir, incremental):
     makedirs(results_dir, exist_ok=True)
 
-    for compressor, serializer in product(all_compressors(), all_serializers()):
+    for compressor, serializer in product(compressors(), serializers()):
         outpath = join(results_dir, 'emails{}{}'.format(
             serializer.extension, compressor.extension))
 
