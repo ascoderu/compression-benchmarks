@@ -20,6 +20,6 @@ print('\t'.join(('Strategy', 'Filesize', 'Duration')))
 
 for strategy_name, strategy in get_strategies():
     compressed_path = join(args.results_dir, 'result' + strategy.EXTENSION)
-    duration = timer(lambda: strategy.compress(sample_emails, compressed_path))
+    duration = timer(lambda: strategy.compress(iter(sample_emails), compressed_path))
 
     print('\t'.join((strategy.EXTENSION.lstrip('.'), filesize(compressed_path), duration)))
