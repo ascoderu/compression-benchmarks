@@ -1,12 +1,14 @@
 from abc import ABC
 from json import dumps
+from json import loads
 from typing import IO
 from typing import Iterable
 
 from fastavro import parse_schema as avro_parse_schema
+from fastavro import reader as avro_reader
 from fastavro import writer as avro_writer
-from msgpack import dump as msgpack_dump
-from msgpack import dumps as msgpack_dumps
+from msgpack import Packer
+from msgpack import Unpacker
 
 
 class _Serialization(ABC):
@@ -15,6 +17,9 @@ class _Serialization(ABC):
         raise NotImplementedError
 
     def serialize(self, objs: Iterable[dict], fobj: IO[bytes]):
+        raise NotImplementedError
+
+    def deserialize(self, fobj: IO[bytes]) -> Iterable[dict]:
         raise NotImplementedError
 
 
@@ -30,34 +35,27 @@ class JsonLinesSerialization(_Serialization):
             fobj.write(serialized.encode(cls.encoding))
             fobj.write(b'\n')
 
+    @classmethod
+    def deserialize(cls, fobj: IO[bytes]) -> Iterable[dict]:
+        for line in fobj:
+            yield loads(line.decode(cls.encoding))
+
 
 class MsgpackSerialization(_Serialization):
     extension = '.msgpack'
 
     @classmethod
     def serialize(cls, objs: Iterable[dict], fobj: IO[bytes]):
+        packer = Packer()
         for obj in objs:
-            msgpack_dump(obj, fobj)
-
-
-class MsgpackHeaderSerialization(_Serialization):
-    extension = '.hmsgpack'
+            serialized = packer.pack(obj)
+            fobj.write(serialized)
 
     @classmethod
-    def _write_item(cls, header, item, stream):
-        record = [item.get(column) for column in header]
-        stream.write(msgpack_dumps(record, use_bin_type=True))
-
-    @classmethod
-    def serialize(cls, objs: Iterable[dict], fobj: IO[bytes]):
-        objs = iter(objs)
-        first = next(objs)
-        header = sorted(first.keys())
-        fobj.write(','.join(header).encode('utf-8'))
-        fobj.write(b'\n')
-        cls._write_item(header, first, fobj)
-        for obj in objs:
-            cls._write_item(header, obj, fobj)
+    def deserialize(cls, fobj: IO[bytes]) -> Iterable[dict]:
+        unpacker = Unpacker(fobj)
+        for obj in unpacker:
+            yield obj
 
 
 class AvroSerialization(_Serialization):
@@ -98,6 +96,11 @@ class AvroSerialization(_Serialization):
     @classmethod
     def serialize(cls, objs: Iterable[dict], fobj: IO[bytes]):
         avro_writer(fobj, cls.schema, objs)
+
+    @classmethod
+    def deserialize(cls, fobj: IO[bytes]) -> Iterable[dict]:
+        for obj in avro_reader(fobj):
+            yield obj
 
 
 def get_all() -> Iterable[_Serialization]:

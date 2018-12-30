@@ -2,7 +2,6 @@ from argparse import ArgumentParser
 from collections import namedtuple
 from csv import DictWriter
 from csv import excel_tab
-from datetime import datetime
 from glob import glob
 from itertools import product
 from os import makedirs
@@ -16,6 +15,7 @@ from benchmarks.serialization import get_all as all_serializers
 from benchmarks.utils import download_sample_emails
 from benchmarks.utils import filesize_kb
 from benchmarks.utils import load_sample_email
+from benchmarks.utils import Timer
 
 parser = ArgumentParser()
 parser.add_argument('emails_zip_url')
@@ -36,10 +36,11 @@ for path in glob(join(args.inputs_dir, '*')):
     sample_emails.append(sample_email)
 
 Benchmark = namedtuple('Benchmark', (
-    'compression',
-    'serialization',
-    'filesize',
-    'runtime'
+    'Compressor',
+    'Serializer',
+    'FileSize',
+    'WriteTime',
+    'ReadTime',
 ))
 
 writer = DictWriter(stdout, Benchmark._fields, dialect=excel_tab)
@@ -53,21 +54,33 @@ for compressor, serializer in product(all_compressors(), all_serializers()):
     if args.incremental and isfile(outpath):
         continue
 
-    start = datetime.now()
     try:
-        with compressor.open(outpath) as fobj:
-            serializer.serialize(iter(sample_emails), fobj)
+        with Timer.timeit() as write_timer:
+            with compressor.open_write(outpath) as fobj:
+                serializer.serialize(iter(sample_emails), fobj)
     except Exception as ex:
         print(ex, file=stderr)
-        runtime, filesize = 'ERROR', 'ERROR'
+        write_time = 'ERROR'
+        filesize = 'ERROR'
     else:
-        end = datetime.now()
-        runtime = '{:.4f} s'.format((end - start).total_seconds())
+        write_time = write_timer.seconds()
         filesize = '{:.2f} kb'.format(filesize_kb(outpath))
 
+    try:
+        with Timer.timeit() as read_timer:
+            with compressor.open_read(outpath) as fobj:
+                for _ in serializer.deserialize(fobj):
+                    pass
+    except Exception as ex:
+        print(ex, file=stderr)
+        read_time = 'ERROR'
+    else:
+        read_time = read_timer.seconds()
+
     writer.writerow(Benchmark(
-        compression=compressor.extension.lstrip('.') or '(none)',
-        serialization=serializer.extension.lstrip('.') or '(none)',
-        filesize=filesize,
-        runtime=runtime,
+        Compressor=compressor.extension.lstrip('.') or '(none)',
+        Serializer=serializer.extension.lstrip('.') or '(none)',
+        FileSize=filesize,
+        WriteTime=write_time,
+        ReadTime=read_time,
     )._asdict())

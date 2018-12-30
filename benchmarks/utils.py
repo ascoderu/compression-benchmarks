@@ -1,3 +1,5 @@
+from contextlib import contextmanager
+from datetime import datetime
 from gzip import open as gzip_open
 from json import loads
 from os import makedirs
@@ -9,6 +11,29 @@ from tempfile import NamedTemporaryFile
 from zipfile import ZipFile
 
 import requests
+
+
+class Timer:
+    def __init__(self):
+        self._start = None
+        self._stop = None
+
+    def start(self):
+        self._start = datetime.now()
+
+    def stop(self):
+        self._stop = datetime.now()
+
+    def seconds(self) -> str:
+        return '{:.4f} s'.format((self._stop - self._start).total_seconds())
+
+    @classmethod
+    @contextmanager
+    def timeit(cls):
+        timer = cls()
+        timer.start()
+        yield timer
+        timer.stop()
 
 
 def download_to_file(url: str) -> str:
