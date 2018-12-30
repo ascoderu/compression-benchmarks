@@ -6,6 +6,7 @@ from tempfile import NamedTemporaryFile
 from typing import IO
 from typing import Iterable
 
+import fastavro
 import msgpack
 
 
@@ -87,3 +88,41 @@ class MsgpackStrategy(_Uncompressed, _MsgpackStrategy):
 
 class MsgpackGzipStrategy(_Gzipped, _MsgpackStrategy):
     EXTENSION = '.msgpack.gz'
+
+
+class _AvroStrategy(_Strategy, ABC):
+    _schema = fastavro.parse_schema({
+        "type": "record",
+        "name": "Email",
+        "fields": [
+            {"name": "sent_at", "type": ["null", "string"]},
+            {"name": "from", "type": ["null", "string"]},
+            {"name": "subject", "type": ["null", "string"]},
+            {"name": "body", "type": ["null", "string"]},
+            {"name": "_uid", "type": ["null", "string"]},
+            {"name": "to", "type": ["null", {"type": "array", "items": "string"}]},
+            {"name": "cc", "type": ["null", {"type": "array", "items": "string"}]},
+            {"name": "bcc", "type": ["null", {"type": "array", "items": "string"}]},
+            {"name": "attachments", "type": ["null", {"type": "array", "items": {
+                "type": "record",
+                "name": "Attachment",
+                "fields": [
+                    {"name": "filename", "type": "string"},
+                    {"name": "content", "type": "string"},
+                ]
+            }}]}
+        ]
+    })
+
+    @classmethod
+    def compress(cls, contents: Iterable[dict], compressed_filename: str) -> None:
+        with cls._open(compressed_filename) as compressed_file:
+            fastavro.writer(compressed_file, cls._schema, contents)
+
+
+class AvroStrategy(_Uncompressed, _AvroStrategy):
+    EXTENSION = '.avro'
+
+
+class AvroGzipStrategy(_Gzipped, _AvroStrategy):
+    EXTENSION = '.avro.gz'
