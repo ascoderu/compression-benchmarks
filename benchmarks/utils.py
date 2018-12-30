@@ -1,9 +1,12 @@
-import gzip
-import json
-import os
 from datetime import datetime
+from gzip import open as gzip_open
 from inspect import getmembers
 from inspect import isclass
+from json import loads
+from os import makedirs
+from os import remove
+from os import stat
+from os.path import isdir
 from shutil import copyfileobj
 from tempfile import NamedTemporaryFile
 from typing import Callable
@@ -23,26 +26,26 @@ def download_to_file(url: str) -> str:
 
 
 def download_sample_emails(emails_zip_url: str, inputs_dir: str) -> None:
-    if os.path.isdir(inputs_dir):
+    if isdir(inputs_dir):
         return
 
     emails_zip = download_to_file(emails_zip_url)
     try:
-        os.makedirs(inputs_dir, exist_ok=True)
+        makedirs(inputs_dir, exist_ok=True)
         ZipFile(emails_zip).extractall(inputs_dir)
     finally:
-        os.remove(emails_zip)
+        remove(emails_zip)
 
 
 def filesize(path: str) -> str:
-    size = os.stat(path).st_size / 1024
+    size = stat(path).st_size / 1024
     return '{:.2f} kb'.format(size)
 
 
 def load_sample_email(path: str) -> dict:
-    with gzip.open(path, 'r') as fobj:
+    with gzip_open(path, 'r') as fobj:
         raw_sample_email = fobj.read().decode('utf-8')
-        return json.loads(raw_sample_email)
+        return loads(raw_sample_email)
 
 
 def timer(callback: Callable[[], None]) -> str:

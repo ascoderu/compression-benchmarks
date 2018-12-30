@@ -1,13 +1,14 @@
-import gzip
-import json
-import tarfile
 from abc import ABC
+from gzip import open as gzip_open
+from json import dumps
+from tarfile import open as tarfile_open
 from tempfile import NamedTemporaryFile
 from typing import IO
 from typing import Iterable
 
-import fastavro
-import msgpack
+from fastavro import parse_schema as avro_parse_schema
+from fastavro import writer as avro_writer
+from msgpack import dump as msgpack_dump
 from zstandard import MAX_COMPRESSION_LEVEL
 from zstandard import ZstdCompressor
 
@@ -27,7 +28,7 @@ class _Uncompressed(ABC):
 class _Gzipped(ABC):
     @classmethod
     def _open(cls, path: str) -> IO[bytes]:
-        return gzip.open(path, 'wb')
+        return gzip_open(path, 'wb')
 
 
 class _Zstd(ABC):
@@ -43,7 +44,7 @@ class _Zstd(ABC):
 class _JsonLinesStrategy(_Strategy, ABC):
     @classmethod
     def _to_json(cls, obj: object) -> bytes:
-        return json.dumps(obj, separators=(',', ':')).encode('utf-8')
+        return dumps(obj, separators=(',', ':')).encode('utf-8')
 
     @classmethod
     def compress(cls, contents: Iterable[dict], outfile: str):
@@ -77,7 +78,7 @@ class _TarballStrategy(JsonLinesStrategy, ABC):
     @classmethod
     def compress(cls, contents: Iterable[dict], outfile: str):
         mode = 'w|' + cls.EXTENSION.split('.')[-1]
-        with tarfile.open(outfile, mode) as archive:
+        with tarfile_open(outfile, mode) as archive:
             with NamedTemporaryFile() as compressed_file:
                 JsonLinesStrategy.compress(contents, compressed_file.name)
                 compressed_file.seek(0)
@@ -101,7 +102,7 @@ class _MsgpackStrategy(_Strategy, ABC):
     def compress(cls, contents: Iterable[dict], outfile: str):
         with cls._open(outfile) as compressed_file:
             for content in contents:
-                msgpack.pack(content, compressed_file)
+                msgpack_dump(content, compressed_file)
 
 
 class MsgpackStrategy(_Uncompressed, _MsgpackStrategy):
@@ -148,7 +149,7 @@ class MsgpackHeaderZstdStrategy(_Zstd, _MsgpackHeaderStrategy):
 
 
 class _AvroStrategy(_Strategy, ABC):
-    _schema = fastavro.parse_schema({
+    _schema = avro_parse_schema({
         "type": "record",
         "name": "Email",
         "fields": [
@@ -183,7 +184,7 @@ class _AvroStrategy(_Strategy, ABC):
     @classmethod
     def compress(cls, contents: Iterable[dict], outfile: str):
         with cls._open(outfile) as compressed_file:
-            fastavro.writer(compressed_file, cls._schema, contents)
+            avro_writer(compressed_file, cls._schema, contents)
 
 
 class AvroStrategy(_Uncompressed, _AvroStrategy):
