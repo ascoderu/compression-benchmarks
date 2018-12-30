@@ -129,10 +129,7 @@ def display_benchmarks(results, display_format, buffer=stdout):
         buffer.write('   <thead>\n')
         buffer.write('    <tr>\n')
         for field in Benchmark._fields:
-            thclass = ''
-            if field.endswith('Kb') or field.endswith('Seconds'):
-                thclass = ' data-sort-method="number"'
-            buffer.write('     <th{}>{}</th>\n'.format(thclass, field))
+            buffer.write('     <th>{}</th>\n'.format(field))
         buffer.write('    </tr>\n')
         buffer.write('   </thead>\n')
         buffer.write('   <tbody>\n')
@@ -141,13 +138,13 @@ def display_benchmarks(results, display_format, buffer=stdout):
             for value in result:
                 tdclass = ''
                 if isinstance(value, BenchmarkError):
-                    value = '<span class="error" title="{}">{}</span>'.format(value, value.ex)  # noqa: E501
-                    tdclass = ' data-sort="999999"'
+                    tdclass = ' class="error" title="{}" data-sort="999999999"'.format(value.ex)  # noqa: E501
                 buffer.write('     <td{}>{}</td>\n'.format(tdclass, value))
             buffer.write('    </tr>\n')
         buffer.write('   </tbody>\n')
         buffer.write('  </table>\n')
         buffer.write('  <script src="https://unpkg.com/tablesort@5.1.0/dist/tablesort.min.js"></script>\n')  # noqa: E501
+        buffer.write('  <script src="https://unpkg.com/tablesort@5.1.0/dist/sorts/tablesort.number.min.js"></script>\n')  # noqa: E501
         buffer.write('  <script>new Tablesort(document.getElementById("benchmarks"))</script>\n')  # noqa: E501
         if getenv('TRAVIS_COMMIT') and getenv('TRAVIS_REPO_SLUG'):
             buffer.write('  <a class="pure-button" href="https://github.com/{}/tree/{}">View code</a>\n'.format(getenv('TRAVIS_REPO_SLUG'), getenv('TRAVIS_COMMIT')))  # noqa: E501
