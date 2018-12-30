@@ -55,6 +55,8 @@ def timer(callback: Callable[[], None]) -> str:
 
 
 def get_strategies() -> list:
-    return [(name.replace('Strategy', '').lower(), clazz)
-            for name, clazz in getmembers(strategy, isclass)
-            if name.endswith('Strategy') and not name.startswith('_')]
+    return sorted([
+        (name.replace('Strategy', '').lower(), clazz)
+        for name, clazz in getmembers(strategy, isclass)
+        if name.endswith('Strategy') and not name.startswith('_')
+    ], key=lambda t: t[0])

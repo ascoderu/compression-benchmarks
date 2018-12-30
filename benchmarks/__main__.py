@@ -2,7 +2,7 @@ from argparse import ArgumentParser
 from csv import DictWriter, excel_tab
 from glob import glob
 from os import makedirs
-from os.path import join
+from os.path import join, isfile
 from sys import stdout
 
 from benchmarks.utils import filesize, load_sample_email, timer, get_strategies, download_sample_emails
@@ -12,6 +12,7 @@ parser.add_argument('emails_zip_url')
 parser.add_argument('--results_dir', default='results')
 parser.add_argument('--inputs_dir', default='sample-emails')
 parser.add_argument('--exclude_attachments', action='store_true')
+parser.add_argument('--incremental', action='store_true')
 args = parser.parse_args()
 
 download_sample_emails(args.emails_zip_url, args.inputs_dir)
@@ -29,6 +30,9 @@ writer.writeheader()
 
 for strategy_name, strategy in get_strategies():
     compressed_path = join(args.results_dir, 'result' + strategy.EXTENSION)
+    if args.incremental and isfile(compressed_path):
+        continue
+
     duration = timer(lambda: strategy.compress(iter(sample_emails), compressed_path))
 
     writer.writerow({
