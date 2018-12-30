@@ -8,7 +8,8 @@ from typing import Iterable
 
 import fastavro
 import msgpack
-from zstandard import ZstdCompressor, MAX_COMPRESSION_LEVEL
+from zstandard import MAX_COMPRESSION_LEVEL
+from zstandard import ZstdCompressor
 
 
 class _Strategy(ABC):
@@ -45,8 +46,8 @@ class _JsonLinesStrategy(_Strategy, ABC):
         return json.dumps(obj, separators=(',', ':')).encode('utf-8')
 
     @classmethod
-    def compress(cls, contents: Iterable[dict], compressed_filename: str):
-        with cls._open(compressed_filename) as compressed_file:
+    def compress(cls, contents: Iterable[dict], outfile: str):
+        with cls._open(outfile) as compressed_file:
             for content in contents:
                 compressed_file.write(cls._to_json(content))
                 compressed_file.write(b'\n')
@@ -70,16 +71,17 @@ class JsonLinesZstdMaxStrategy(_Zstd, _JsonLinesStrategy):
 
 
 class _TarballStrategy(JsonLinesStrategy, ABC):
+    _MEMBER_FILENAME = 'file' + JsonLinesStrategy.EXTENSION
     EXTENSION = ''
 
     @classmethod
-    def compress(cls, contents: Iterable[dict], compressed_filename: str) -> None:
+    def compress(cls, contents: Iterable[dict], outfile: str):
         mode = 'w|' + cls.EXTENSION.split('.')[-1]
-        with tarfile.open(compressed_filename, mode) as archive:
+        with tarfile.open(outfile, mode) as archive:
             with NamedTemporaryFile() as compressed_file:
                 JsonLinesStrategy.compress(contents, compressed_file.name)
                 compressed_file.seek(0)
-                archive.add(compressed_file.name, 'file' + JsonLinesStrategy.EXTENSION)
+                archive.add(compressed_file.name, cls._MEMBER_FILENAME)
 
 
 class GzTarballStrategy(_TarballStrategy):
@@ -96,8 +98,8 @@ class XzTarballStrategy(_TarballStrategy):
 
 class _MsgpackStrategy(_Strategy, ABC):
     @classmethod
-    def compress(cls, contents: Iterable[dict], compressed_filename: str) -> None:
-        with cls._open(compressed_filename) as compressed_file:
+    def compress(cls, contents: Iterable[dict], outfile: str):
+        with cls._open(outfile) as compressed_file:
             for content in contents:
                 msgpack.pack(content, compressed_file)
 
@@ -121,9 +123,9 @@ class _MsgpackHeaderStrategy(_Strategy, ABC):
         stream.write(msgpack.packb(record, use_bin_type=True))
 
     @classmethod
-    def compress(cls, contents: Iterable[dict], compressed_filename: str) -> None:
+    def compress(cls, contents: Iterable[dict], outfile: str):
         contents = iter(contents)
-        with cls._open(compressed_filename) as compressed_file:
+        with cls._open(outfile) as compressed_file:
             first = next(contents)
             header = sorted(first.keys())
             compressed_file.write(','.join(header).encode('utf-8'))
@@ -150,28 +152,37 @@ class _AvroStrategy(_Strategy, ABC):
         "type": "record",
         "name": "Email",
         "fields": [
-            {"name": "sent_at", "type": ["null", "string"]},
-            {"name": "from", "type": ["null", "string"]},
-            {"name": "subject", "type": ["null", "string"]},
-            {"name": "body", "type": ["null", "string"]},
-            {"name": "_uid", "type": ["null", "string"]},
-            {"name": "to", "type": ["null", {"type": "array", "items": "string"}]},
-            {"name": "cc", "type": ["null", {"type": "array", "items": "string"}]},
-            {"name": "bcc", "type": ["null", {"type": "array", "items": "string"}]},
-            {"name": "attachments", "type": ["null", {"type": "array", "items": {
+            {"name": "sent_at",
+             "type": ["null", "string"]},
+            {"name": "from",
+             "type": ["null", "string"]},
+            {"name": "subject",
+             "type": ["null", "string"]},
+            {"name": "body",
+             "type": ["null", "string"]},
+            {"name": "_uid",
+             "type": ["null", "string"]},
+            {"name": "to",
+             "type": ["null", {"type": "array", "items": "string"}]},
+            {"name": "cc",
+             "type": ["null", {"type": "array", "items": "string"}]},
+            {"name": "bcc",
+             "type": ["null", {"type": "array", "items": "string"}]},
+            {"name": "attachments",
+             "type": ["null", {"type": "array", "items": {
                 "type": "record",
                 "name": "Attachment",
                 "fields": [
                     {"name": "filename", "type": "string"},
                     {"name": "content", "type": "string"},
                 ]
-            }}]}
+             }}]}
         ]
     })
 
     @classmethod
-    def compress(cls, contents: Iterable[dict], compressed_filename: str) -> None:
-        with cls._open(compressed_filename) as compressed_file:
+    def compress(cls, contents: Iterable[dict], outfile: str):
+        with cls._open(outfile) as compressed_file:
             fastavro.writer(compressed_file, cls._schema, contents)
 
 

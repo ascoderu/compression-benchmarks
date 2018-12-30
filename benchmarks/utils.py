@@ -1,11 +1,12 @@
 import gzip
 import json
 import os
-from typing import Callable
 from datetime import datetime
-from inspect import getmembers, isclass
+from inspect import getmembers
+from inspect import isclass
 from shutil import copyfileobj
 from tempfile import NamedTemporaryFile
+from typing import Callable
 from zipfile import ZipFile
 
 import requests

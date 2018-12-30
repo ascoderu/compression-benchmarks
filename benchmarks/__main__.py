@@ -1,11 +1,17 @@
 from argparse import ArgumentParser
-from csv import DictWriter, excel_tab
+from csv import DictWriter
+from csv import excel_tab
 from glob import glob
 from os import makedirs
-from os.path import join, isfile
+from os.path import isfile
+from os.path import join
 from sys import stdout
 
-from benchmarks.utils import filesize, load_sample_email, timer, get_strategies, download_sample_emails
+from benchmarks.utils import download_sample_emails
+from benchmarks.utils import filesize
+from benchmarks.utils import get_strategies
+from benchmarks.utils import load_sample_email
+from benchmarks.utils import timer
 
 parser = ArgumentParser()
 parser.add_argument('emails_zip_url')
@@ -25,7 +31,8 @@ for path in glob(join(args.inputs_dir, '*')):
         sample_email.pop('attachments', None)
     sample_emails.append(sample_email)
 
-writer = DictWriter(stdout, ('Strategy', 'Filesize', 'Duration'), dialect=excel_tab)
+writer = DictWriter(stdout, ('Strategy', 'Filesize', 'Duration'),
+                    dialect=excel_tab)
 writer.writeheader()
 
 for strategy_name, strategy in get_strategies():
@@ -33,7 +40,8 @@ for strategy_name, strategy in get_strategies():
     if args.incremental and isfile(compressed_path):
         continue
 
-    duration = timer(lambda: strategy.compress(iter(sample_emails), compressed_path))
+    duration = timer(lambda: strategy.compress(
+        iter(sample_emails), compressed_path))
 
     writer.writerow({
         'Strategy': strategy.EXTENSION.lstrip('.'),
