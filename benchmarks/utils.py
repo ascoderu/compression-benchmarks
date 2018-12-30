@@ -51,10 +51,10 @@ def timer(callback: Callable[[], None]) -> str:
     callback()
     end = datetime.now()
     ellapsed = (end - start).total_seconds()
-    return '{:.4f}'.format(ellapsed)
+    return '{:.4f} s'.format(ellapsed)
 
 
 def get_strategies() -> list:
     return [(name.replace('Strategy', '').lower(), clazz)
             for name, clazz in getmembers(strategy, isclass)
-            if name.endswith('Strategy')]
+            if name.endswith('Strategy') and not name.startswith('_')]

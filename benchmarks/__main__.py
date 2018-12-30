@@ -1,7 +1,7 @@
 from argparse import ArgumentParser
 from glob import glob
 from os import makedirs
-from os.path import join, basename
+from os.path import join
 
 from colorama import Fore, Style
 from tablib import Dataset
@@ -15,24 +15,18 @@ parser.add_argument('--inputs_dir', default='sample-emails')
 args = parser.parse_args()
 
 download_sample_emails(args.emails_zip_url, args.inputs_dir)
+makedirs(args.results_dir, exist_ok=True)
 
-sample_emails = [(path, load_sample_email(path)) for path in glob(join(args.inputs_dir, '*'))]
+sample_emails = [load_sample_email(path) for path in glob(join(args.inputs_dir, '*'))]
+
+table = Dataset(title='Benchmark', headers=['Strategy', 'Filesize', 'Duration'])
 
 for strategy_name, strategy in get_strategies():
-    strategy_dir = join(args.results_dir, strategy_name)
-    makedirs(strategy_dir, exist_ok=True)
+    compressed_path = join(args.results_dir, 'result' + strategy.EXTENSION)
+    duration = timer(lambda: strategy.compress(sample_emails, compressed_path))
 
-    table = Dataset(title=strategy_name, headers=['Original', 'Compressed', 'Duration'])
+    table.append((strategy.EXTENSION, filesize(compressed_path), duration))
 
-    for original_file, sample_email in sample_emails:
-        compressed_path = join(strategy_dir, basename(original_file) + strategy.EXTENSION)
-        try:
-            duration = timer(lambda: strategy.compress(sample_email, compressed_path))
-        except Exception as e:
-            table.append(['ERROR'] * len(table.headers))
-        else:
-            table.append((filesize(original_file), filesize(compressed_path), duration))
-
-    print(Fore.YELLOW, table.title)
-    print(Fore.GREEN, table.export('df'))
-    print(Style.RESET_ALL)
+print(Fore.YELLOW, table.title)
+print(Fore.GREEN, table.export('df'))
+print(Style.RESET_ALL)

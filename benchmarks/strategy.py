@@ -1,63 +1,62 @@
 import gzip
 import json
-from os.path import dirname, join
+from abc import ABC
+from typing import IO
+from typing import Iterable
 
-import avro.schema
 import msgpack
-from avro.datafile import DataFileWriter
-from avro.io import DatumWriter
-from bson import BSON
 
 
-def to_json(obj: object) -> str:
-    return json.dumps(obj, separators=(',', ':'))
+class _Strategy(ABC):
+    @classmethod
+    def _open(cls, path: str) -> IO[bytes]:
+        raise NotImplementedError
 
 
-class NoCompressionStrategy:
-    EXTENSION = '.json'
-
-    @staticmethod
-    def compress(contents: dict, compressed_filename: str) -> None:
-        with open(compressed_filename, 'w') as compressed_file:
-            compressed_file.write(to_json(contents))
+class _Uncompressed(ABC):
+    @classmethod
+    def _open(cls, path: str) -> IO[bytes]:
+        return open(path, 'wb')
 
 
-class GzipStrategy:
-    EXTENSION = '.json.gz'
-
-    @staticmethod
-    def compress(contents: dict, compressed_filename: str) -> None:
-        with gzip.open(compressed_filename, 'wb') as compressed_file:
-            compressed_file.write(to_json(contents).encode('utf-8'))
+class _Gzipped(ABC):
+    @classmethod
+    def _open(cls, path: str) -> IO[bytes]:
+        return gzip.open(path, 'wb')
 
 
-class MsgpackStrategy:
+class _JsonLinesStrategy(_Strategy, ABC):
+    @classmethod
+    def _to_json(cls, obj: object) -> bytes:
+        return json.dumps(obj, separators=(',', ':')).encode('utf-8')
+
+    @classmethod
+    def compress(cls, contents: Iterable[dict], compressed_filename: str):
+        with cls._open(compressed_filename) as compressed_file:
+            for content in contents:
+                compressed_file.write(cls._to_json(content))
+                compressed_file.write(b'\n')
+
+
+class JsonLinesStrategy(_Uncompressed, _JsonLinesStrategy):
+    EXTENSION = '.jsonl'
+
+
+class JsonLinesGzipStrategy(_Gzipped, _JsonLinesStrategy):
+    EXTENSION = '.jsonl.gz'
+
+
+class _MsgpackStrategy(_Strategy, ABC):
+    @classmethod
+    def compress(cls, contents: Iterable[dict], compressed_filename: str) -> None:
+        with cls._open(compressed_filename) as compressed_file:
+            for content in contents:
+                msgpack.pack(content, compressed_file)
+
+
+class MsgpackStrategy(_Uncompressed, _MsgpackStrategy):
     EXTENSION = '.msgpack'
 
-    @staticmethod
-    def compress(contents: dict, compressed_filename: str) -> None:
-        with open(compressed_filename, 'wb') as compressed_file:
-            compressed_file.write(msgpack.packb(contents))
 
-
-class BsonStrategy:
-    EXTENSION = '.bson'
-
-    @staticmethod
-    def compress(contents: dict, compressed_filename: str) -> None:
-        with open(compressed_filename, 'wb') as compressed_file:
-            compressed_file.write(BSON.encode(contents))
-
-
-class AvroStrategy:
-    EXTENSION = '.avro'
-
-    @staticmethod
-    def compress(contents: dict, compressed_filename: str) -> None:
-        with open(join(dirname(__file__), 'email.avsc')) as fobj:
-            schema = avro.schema.Parse(fobj.read())
-
-        with open(compressed_filename, 'wb') as compressed_file:
-            writer = DataFileWriter(compressed_file, DatumWriter(), schema)
-            writer.append(contents)
-            writer.close()
+class MsgpackGzipStrategy(_Gzipped, _MsgpackStrategy):
+    EXTENSION = '.msgpack.gz'
