@@ -46,14 +46,14 @@ class MsgpackSerialization(_Serialization):
 
     @classmethod
     def serialize(cls, objs: Iterable[dict], fobj: IO[bytes]):
-        packer = Packer()
+        packer = Packer(use_bin_type=True)
         for obj in objs:
             serialized = packer.pack(obj)
             fobj.write(serialized)
 
     @classmethod
     def deserialize(cls, fobj: IO[bytes]) -> Iterable[dict]:
-        unpacker = Unpacker(fobj)
+        unpacker = Unpacker(fobj, raw=False)
         for obj in unpacker:
             yield obj
 
