@@ -1,4 +1,5 @@
 from argparse import ArgumentParser
+from collections import namedtuple
 from csv import DictWriter
 from csv import excel_tab
 from datetime import datetime
@@ -34,9 +35,14 @@ for path in glob(join(args.inputs_dir, '*')):
         sample_email.pop('attachments', None)
     sample_emails.append(sample_email)
 
-writer = DictWriter(
-    stdout, ('Compression', 'Serialization', 'Filesize', 'Runtime'),
-    dialect=excel_tab)
+Benchmark = namedtuple('Benchmark', (
+    'compression',
+    'serialization',
+    'filesize',
+    'runtime'
+))
+
+writer = DictWriter(stdout, Benchmark._fields, dialect=excel_tab)
 
 writer.writeheader()
 
@@ -59,9 +65,9 @@ for compressor, serializer in product(all_compressors(), all_serializers()):
         runtime = '{:.4f} s'.format((end - start).total_seconds())
         filesize = '{:.2f} kb'.format(filesize_kb(outpath))
 
-    writer.writerow({
-        'Compression': compressor.extension.lstrip('.') or '(none)',
-        'Serialization': serializer.extension.lstrip('.') or '(none)',
-        'Filesize': filesize,
-        'Runtime': runtime,
-    })
+    writer.writerow(Benchmark(
+        compression=compressor.extension.lstrip('.') or '(none)',
+        serialization=serializer.extension.lstrip('.') or '(none)',
+        filesize=filesize,
+        runtime=runtime,
+    )._asdict())
