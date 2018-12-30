@@ -97,8 +97,11 @@ def display_benchmarks(results, display_format, buffer=stdout):
             writer.writerow(result._asdict())
 
     elif display_format == 'html':
+        buffer.write('<!doctype html>\n')
         buffer.write('<html>\n')
         buffer.write(' <head>\n')
+        buffer.write('  <meta charset="utf-8">\n')
+        buffer.write('  <meta name="viewport" content="width=device-width, initial-scale=1">\n')  # noqa: E501
         buffer.write('  <title>Ascoderu compression benchmark results</title>\n')  # noqa: E501
         buffer.write('  <link rel="stylesheet" href="https://unpkg.com/purecss@1.0.0/build/base-min.css">\n')  # noqa: E501
         buffer.write('  <link rel="stylesheet" href="https://unpkg.com/purecss@1.0.0/build/pure-min.css">\n')  # noqa: E501
