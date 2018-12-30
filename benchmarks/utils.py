@@ -11,8 +11,6 @@ from zipfile import ZipFile
 
 import requests
 
-from benchmarks import strategy
-
 
 def download_to_file(url: str) -> str:
     response = requests.get(url, stream=True)
@@ -56,6 +54,8 @@ def timer(callback: Callable[[], None]) -> str:
 
 
 def get_strategies() -> list:
+    from benchmarks import strategy
+
     return sorted([
         (name.replace('Strategy', '').lower(), clazz)
         for name, clazz in getmembers(strategy, isclass)
