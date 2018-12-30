@@ -56,10 +56,15 @@ class ZstandardCompression(_Compression):
     def extension(self) -> str:
         return '.{}.zs'.format(self.level)
 
+    @contextmanager
     def open_write(self, path: str) -> IO[bytes]:
         compressor = ZstdCompressor(level=self.level)
         fobj = open(path, 'wb')
-        return compressor.stream_writer(fobj)
+        try:
+            with compressor.stream_writer(fobj) as writer:
+                yield writer
+        finally:
+            fobj.close()
 
     @contextmanager
     def open_read(self, path: str) -> IO[bytes]:
