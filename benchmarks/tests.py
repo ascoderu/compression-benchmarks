@@ -11,23 +11,18 @@ from benchmarks.serialization import get_all as serializers
 
 class CompressionTests(TestCase):
     def test_roundtrip(self):
-        failures = []
         for compressor in compressors():
-            expected = b'test content'
-            path = self.given_tempfile(compressor)
+            with self.subTest(compressor=compressor):
+                expected = b'test content'
+                path = self.given_tempfile(compressor)
 
-            with compressor.open_write(path) as compressed:
-                compressed.write(expected)
+                with compressor.open_write(path) as compressed:
+                    compressed.write(expected)
 
-            with compressor.open_read(path) as decompressed:
-                actual = decompressed.read()
+                with compressor.open_read(path) as decompressed:
+                    actual = decompressed.read()
 
-            failed = actual != expected
-            if failed:
-                failures.append(compressor.extension)
-
-        if failures:
-            self.fail(', '.join(failures))
+                self.assertEqual(actual, expected)
 
     def setUp(self):
         self.temp_paths = []
@@ -45,22 +40,21 @@ class CompressionTests(TestCase):
 
 class SerializationTests(TestCase):
     def test_roundtrip(self):
-        failures = []
         for serializer in serializers():
-            expected = [{'to': ['foo@bar'], 'subject': 'baz', 'attachments': [
-                {'filename': 'attachment.txt',
-                 'content': b64encode(b'foo').decode('ascii')}
-            ]}]
-            fobj = BytesIO()
-            serializer.serialize(expected, fobj)
-            fobj.seek(0)
-            actual = list(serializer.deserialize(fobj))
-            failed = len(actual) != 1 or expected[0] != actual[0]
-            if failed:
-                failures.append(serializer.extension)
-
-        if failures:
-            self.fail(', '.join(failures))
+            with self.subTest(serializer=serializer):
+                expected = [{
+                    'to': ['foo@bar'],
+                    'subject': 'baz',
+                    'attachments': [{
+                        'filename': 'attachment.txt',
+                        'content': b64encode(b'foo').decode('ascii')
+                    }],
+                }]
+                fobj = BytesIO()
+                serializer.serialize(expected, fobj)
+                fobj.seek(0)
+                actual = list(serializer.deserialize(fobj))
+                self.assertListEqual(actual, expected)
 
 
 if __name__ == '__main__':
