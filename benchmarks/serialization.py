@@ -1,4 +1,7 @@
 from abc import ABC
+from base64 import b64decode
+from base64 import b64encode
+from copy import deepcopy
 from json import dumps
 from json import loads
 from typing import IO
@@ -48,6 +51,7 @@ class BsonLinesSerialization(_Serialization):
     @classmethod
     def serialize(cls, objs: Iterable[dict], fobj: IO[bytes]):
         for obj in objs:
+            obj = byteify_attachments(obj)
             fobj.write(BSON.encode(obj))
             fobj.write(b'\n')
 
@@ -55,7 +59,10 @@ class BsonLinesSerialization(_Serialization):
     def deserialize(cls, fobj: IO[bytes]) -> Iterable[dict]:
         for line in fobj:
             # noinspection PyCallByClass,PyTypeChecker
-            yield BSON.decode(line.rstrip(b'\n'))
+            obj = BSON.decode(line.rstrip(b'\n'))
+            # noinspection PyTypeChecker
+            obj = unbyteify_attachments(obj)
+            yield obj
 
 
 class MsgpackSerialization(_Serialization):
@@ -65,6 +72,7 @@ class MsgpackSerialization(_Serialization):
     def serialize(cls, objs: Iterable[dict], fobj: IO[bytes]):
         packer = Packer(use_bin_type=True)
         for obj in objs:
+            obj = byteify_attachments(obj)
             serialized = packer.pack(obj)
             fobj.write(serialized)
 
@@ -72,6 +80,7 @@ class MsgpackSerialization(_Serialization):
     def deserialize(cls, fobj: IO[bytes]) -> Iterable[dict]:
         unpacker = Unpacker(fobj, raw=False)
         for obj in unpacker:
+            obj = unbyteify_attachments(obj)
             yield obj
 
 
@@ -104,7 +113,7 @@ class AvroSerialization(_Serialization):
                 "name": "Attachment",
                 "fields": [
                     {"name": "filename", "type": "string"},
-                    {"name": "content", "type": "string"},
+                    {"name": "content", "type": "bytes"},
                 ]
              }}]}
         ]
@@ -112,13 +121,41 @@ class AvroSerialization(_Serialization):
 
     @classmethod
     def serialize(cls, objs: Iterable[dict], fobj: IO[bytes]):
+        objs = (byteify_attachments(obj) for obj in objs)
         avro_writer(fobj, cls.schema, objs)
 
     @classmethod
     def deserialize(cls, fobj: IO[bytes]) -> Iterable[dict]:
         for obj in avro_reader(fobj):
+            obj = unbyteify_attachments(obj)
             yield {key: value for (key, value) in obj.items()
                    if value is not None}
+
+
+def byteify_attachments(obj: dict) -> dict:
+    if not obj.get('attachments'):
+        return obj
+
+    obj = deepcopy(obj)
+
+    for attachment in obj['attachments']:
+        content = attachment['content']
+        attachment['content'] = b64decode(content)
+
+    return obj
+
+
+def unbyteify_attachments(obj: dict) -> dict:
+    if not obj.get('attachments'):
+        return obj
+
+    obj = deepcopy(obj)
+
+    for attachment in obj['attachments']:
+        content = attachment['content']
+        attachment['content'] = b64encode(content).decode('ascii')
+
+    return obj
 
 
 def get_all() -> Iterable[_Serialization]:

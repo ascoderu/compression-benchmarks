@@ -1,3 +1,4 @@
+from base64 import b64encode
 from io import BytesIO
 from os import close
 from os import remove
@@ -46,7 +47,10 @@ class SerializationTests(TestCase):
     def test_roundtrip(self):
         failures = []
         for serializer in serializers():
-            expected = [{'to': ['foo@bar.com'], 'subject': 'baz'}]
+            expected = [{'to': ['foo@bar'], 'subject': 'baz', 'attachments': [
+                {'filename': 'attachment.txt',
+                 'content': b64encode(b'foo').decode('ascii')}
+            ]}]
             fobj = BytesIO()
             serializer.serialize(expected, fobj)
             fobj.seek(0)
