@@ -9,9 +9,11 @@ from os.path import isfile
 from os.path import join
 from sys import stderr
 from sys import stdout
+from tempfile import NamedTemporaryFile
 
 from benchmarks.compression import get_all as compressors
 from benchmarks.serialization import get_all as serializers
+from benchmarks.encryption import get_all as encryptors
 from benchmarks.utils import Timer
 from benchmarks.utils import download_sample_emails
 from benchmarks.utils import filesize_kb
@@ -22,6 +24,7 @@ from benchmarks.utils import remove_if_exists
 Benchmark = namedtuple('Benchmark', (
     'Compressor',
     'Serializer',
+    'Encryptor',
     'FilesizeKb',
     'WriteTimeSeconds',
     'ReadTimeSeconds',
@@ -47,11 +50,12 @@ def load_samples(zip_url, inputs_dir, exclude_attachments):
     return sample_emails
 
 
-def print_error(stage, compressor, serializer, ex):
-    print('Error during {}-phase in {}+{}: {}'.format(
+def print_error(stage, compressor, serializer, encryptor, ex):
+    print('Error during {}-phase in {}+{}+{}: {}'.format(
         stage,
         pretty_extension(compressor.extension),
         pretty_extension(serializer.extension),
+        pretty_extension(encryptor.extension),
         ex,
     ), file=stderr)
 
@@ -59,9 +63,9 @@ def print_error(stage, compressor, serializer, ex):
 def run_benchmarks(emails, results_dir, incremental):
     makedirs(results_dir, exist_ok=True)
 
-    for compressor, serializer in product(compressors(), serializers()):
-        outpath = join(results_dir, 'emails{}{}'.format(
-            serializer.extension, compressor.extension))
+    for compressor, serializer, encryptor in product(compressors(), serializers(), encryptors()):
+        outpath = join(results_dir, 'emails{}{}{}'.format(
+            serializer.extension, compressor.extension, encryptor.extension))
 
         if incremental and isfile(outpath):
             continue
@@ -69,9 +73,11 @@ def run_benchmarks(emails, results_dir, incremental):
         try:
             with Timer.timeit() as write_timer:
                 with compressor.open_write(outpath) as fobj:
-                    serializer.serialize(iter(emails), fobj)
+                    with encryptor.encrypt(fobj) as enc:
+                        serializer.serialize(iter(emails), enc)
+
         except Exception as ex:
-            print_error('write', compressor, serializer, ex)
+            print_error('write', compressor, serializer, encryptor, ex)
             write_time = BenchmarkError(ex)
             filesize = BenchmarkError(ex)
         else:
@@ -81,10 +87,12 @@ def run_benchmarks(emails, results_dir, incremental):
         try:
             with Timer.timeit() as read_timer:
                 with compressor.open_read(outpath) as fobj:
-                    for _ in serializer.deserialize(fobj):
-                        pass
+                    with encryptor.deserialize(fobj) as dec:
+                        for _ in serializer.deserialize(dec):
+                            pass
+
         except Exception as ex:
-            print_error('read', compressor, serializer, ex)
+            print_error('read', compressor, serializer, encryptor, ex)
             read_time = BenchmarkError(ex)
         else:
             read_time = read_timer.seconds()
@@ -92,6 +100,7 @@ def run_benchmarks(emails, results_dir, incremental):
         yield Benchmark(
             Compressor=pretty_extension(compressor.extension),
             Serializer=pretty_extension(serializer.extension),
+            Encryptor = pretty_extension(encryptor.extension),
             FilesizeKb=filesize,
             WriteTimeSeconds=write_time,
             ReadTimeSeconds=read_time,
