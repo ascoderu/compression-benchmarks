@@ -99,7 +99,7 @@ def run_benchmarks(emails, results_dir, incremental):
         yield Benchmark(
             Compressor=pretty_extension(compressor.extension),
             Serializer=pretty_extension(serializer.extension),
-            Encryptor = pretty_extension(encryptor.extension),
+            Encryptor=pretty_extension(encryptor.extension),
             FilesizeKb=filesize,
             WriteTimeSeconds=write_time,
             ReadTimeSeconds=read_time,
