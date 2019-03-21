@@ -9,7 +9,6 @@ from os.path import isfile
 from os.path import join
 from sys import stderr
 from sys import stdout
-from tempfile import NamedTemporaryFile
 
 from benchmarks.compression import get_all as compressors
 from benchmarks.serialization import get_all as serializers
