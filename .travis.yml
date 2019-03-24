@@ -7,10 +7,11 @@ python:
   - "3.6"
 
 before_script:
-  - pip install flake8
+  - pip install flake8 isort
 
 script:
   - flake8 benchmarks
+  - isort --check-only --recursive benchmarks
   - python3 -m benchmarks.tests
 
 before_deploy:
