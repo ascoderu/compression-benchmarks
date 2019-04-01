@@ -273,15 +273,11 @@ class AesEncryption(_Encryption):
             hmac_salt
         )
 
-        try:
-            with NamedTemporaryFile() as temp:
-                yield temp
-                temp.seek(0)
-                for item in encrypt_stream(temp):
-                    fobj.write(item)
-
-        finally:
-            pass
+        with NamedTemporaryFile() as temp:
+            yield temp
+            temp.seek(0)
+            for item in encrypt_stream(temp):
+                fobj.write(item)
 
     @contextmanager
     def deserialize(self, fobj: IO[bytes]) -> IO[bytes]:
@@ -297,14 +293,10 @@ class AesEncryption(_Encryption):
             default_backend
         )
 
-        try:
-            with NamedTemporaryFile() as temp:
-                for item in decrypt(fobj):
-                    temp.write(item)
-                yield temp
-
-        finally:
-            pass
+        with NamedTemporaryFile() as temp:
+            for item in decrypt(fobj):
+                temp.write(item)
+            yield temp
 
 
 class NoEncryption(_Encryption):
