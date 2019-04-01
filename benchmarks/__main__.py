@@ -62,7 +62,9 @@ def print_error(stage, compressor, serializer, encryptor, ex):
 def run_benchmarks(emails, results_dir, incremental):
     makedirs(results_dir, exist_ok=True)
 
-    for compressor, serializer, encryptor in product(compressors(), serializers(), encryptors()):
+    benchmarks = product(compressors(), serializers(), encryptors())
+
+    for compressor, serializer, encryptor in benchmarks:
         outpath = join(results_dir, 'emails{}{}{}'.format(
             serializer.extension, compressor.extension, encryptor.extension))
 

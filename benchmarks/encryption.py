@@ -4,8 +4,7 @@ from typing import Iterable
 from os import urandom
 from contextlib import contextmanager
 from tempfile import NamedTemporaryFile
-from base64 import b64encode
-
+from itertools import tee
 
 from cryptography.hazmat.primitives.ciphers import Cipher
 from cryptography.hazmat.primitives.ciphers.algorithms import AES
@@ -15,8 +14,6 @@ from cryptography.hazmat.primitives.hashes import SHA256
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 from cryptography.hazmat.backends import default_backend
 
-from itertools import tee
-from os import urandom
 
 PASSWORD_DERIVE_ITER = 100000
 
@@ -67,7 +64,10 @@ class KeyDerive(object):
 
 class Encrypt(object):
 
-    def __init__(self, key, hmac_key, hmac, hash, cipher, algorithm, mode, backend, salt, hmac_salt):
+    def __init__(self, key, hmac_key,
+                 hmac, hash, cipher,
+                 algorithm, mode, backend,
+                 salt, hmac_salt):
 
         self._key = key
         self._hmac_key = hmac_key
@@ -120,7 +120,9 @@ class Encrypt(object):
 
 class Decrypt(object):
 
-    def __init__(self, password, hash, derive, hmac, cipher, algorithm, mode, backend):
+    def __init__(self, password, hash,
+                 derive, hmac, cipher,
+                 algorithm, mode, backend):
 
         self._password = password
         self._hash = hash
@@ -259,17 +261,17 @@ class AesEncryption(_Encryption):
         hmac_key = hmac_key_deriver()
 
         encrypt_stream = Encrypt(
-        key,
-        hmac_key,
-        HMAC,
-        SHA256,
-        Cipher,
-        AES,
-        CTR,
-        default_backend,
-        salt,
-        hmac_salt
-    )
+            key,
+            hmac_key,
+            HMAC,
+            SHA256,
+            Cipher,
+            AES,
+            CTR,
+            default_backend,
+            salt,
+            hmac_salt
+        )
 
         try:
             with NamedTemporaryFile() as temp:
@@ -307,7 +309,7 @@ class AesEncryption(_Encryption):
 
 class NoEncryption(_Encryption):
 
-    extension = ' '
+    extension = ''
 
     @contextmanager
     def encrypt(self, fobj: IO[bytes]) -> IO[bytes]:
@@ -322,6 +324,7 @@ class NoEncryption(_Encryption):
             yield fobj
         finally:
             pass
+
 
 def get_all() -> Iterable[_Encryption]:
     return (
