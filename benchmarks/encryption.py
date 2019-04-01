@@ -102,7 +102,7 @@ class Encrypt(object):
         for raw in data:
             out = encryptor.update(raw)
 
-            if not iv_sent:
+            if not aes_params_sent:
                 out = self._iv + self._salt + self._hmac_salt + out
                 aes_params_sent = True
 
@@ -153,17 +153,17 @@ class Decrypt(object):
 
         while ahead_val is not None:
 
-            bytes = next(cur, None)
+            file_bytes = next(cur, None)
             ahead_val = next(ahead, None)
 
-            while (len(bytes) < minsize) and ahead_val is not None:
-                bytes += next(cur, None)
+            while (len(file_bytes) < minsize) and ahead_val is not None:
+                file_bytes += next(cur, None)
                 ahead_val = next(ahead, None)
 
             if ahead_val is None:
-                yield (bytes, None)
+                yield (file_bytes, None)
             else:
-                yield (bytes, True)
+                yield (file_bytes, True)
 
     def __call__(self, data):
 
