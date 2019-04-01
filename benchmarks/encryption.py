@@ -97,14 +97,14 @@ class Encrypt(object):
         )
 
         encryptor = ciph.encryptor()
-        iv_sent = False
+        aes_params_sent = False
 
         for raw in data:
             out = encryptor.update(raw)
 
             if not iv_sent:
                 out = self._iv + self._salt + self._hmac_salt + out
-                iv_sent = True
+                aes_params_sent = True
 
             h.update(out)
 
