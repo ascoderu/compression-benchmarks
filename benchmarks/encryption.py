@@ -217,7 +217,7 @@ class Decrypt(object):
 class _Encryption(ABC):
 
     @property
-    def extension(self)->str:
+    def extension(self) -> str:
         raise NotImplementedError
 
     @contextmanager
