@@ -178,7 +178,6 @@ def cli():
     parser.add_argument('--incremental', action='store_true')
     parser.add_argument('--display_format', default='csv')
     args = parser.parse_args()
-
     emails = load_samples(args.emails_zip_url, args.inputs_dir,
                           args.exclude_attachments)
 
