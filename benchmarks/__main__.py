@@ -11,8 +11,8 @@ from sys import stderr
 from sys import stdout
 
 from benchmarks.compression import get_all as compressors
-from benchmarks.serialization import get_all as serializers
 from benchmarks.encryption import get_all as encryptors
+from benchmarks.serialization import get_all as serializers
 from benchmarks.utils import Timer
 from benchmarks.utils import download_sample_emails
 from benchmarks.utils import filesize_kb

@@ -1,19 +1,18 @@
 from abc import ABC
+from contextlib import contextmanager
+from itertools import tee
+from os import urandom
+from tempfile import NamedTemporaryFile
 from typing import IO
 from typing import Iterable
-from os import urandom
-from contextlib import contextmanager
-from tempfile import NamedTemporaryFile
-from itertools import tee
 
+from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.ciphers import Cipher
 from cryptography.hazmat.primitives.ciphers.algorithms import AES
 from cryptography.hazmat.primitives.ciphers.modes import CTR
-from cryptography.hazmat.primitives.hmac import HMAC
 from cryptography.hazmat.primitives.hashes import SHA256
+from cryptography.hazmat.primitives.hmac import HMAC
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
-from cryptography.hazmat.backends import default_backend
-
 
 PASSWORD_DERIVE_ITER = 100000
 
