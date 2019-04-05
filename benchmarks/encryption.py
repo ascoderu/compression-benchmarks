@@ -1,6 +1,5 @@
 from abc import ABC
 from contextlib import contextmanager
-from itertools import tee
 from os import urandom
 from tempfile import NamedTemporaryFile
 from typing import IO
@@ -147,19 +146,17 @@ class Decrypt(object):
 
     def _return_chunks(self, data, minsize=48):
 
-        cur, ahead = tee(data)
-        ahead_val = next(ahead, None)
+        next_val = next(data, None)
 
-        while ahead_val is not None:
+        while next_val is not None:
 
-            file_bytes = next(cur, None)
-            ahead_val = next(ahead, None)
+            file_bytes = b""
 
-            while (len(file_bytes) < minsize) and ahead_val is not None:
-                file_bytes += next(cur, None)
-                ahead_val = next(ahead, None)
+            while (len(file_bytes) < minsize) and next_val is not None:
+                file_bytes += next_val
+                next_val = next(data, None)
 
-            if ahead_val is None:
+            if next_val is None:
                 yield (file_bytes, None)
             else:
                 yield (file_bytes, True)
@@ -295,6 +292,7 @@ class AesEncryption(_Encryption):
         with NamedTemporaryFile() as temp:
             for item in decrypt(fobj):
                 temp.write(item)
+            temp.seek(0)
             yield temp
 
 
