@@ -1,5 +1,7 @@
 from abc import ABC
 from contextlib import contextmanager
+from io import SEEK_END
+from io import SEEK_SET
 from os import urandom
 from tempfile import NamedTemporaryFile
 from typing import IO
@@ -146,6 +148,10 @@ class Decrypt(object):
 
     def _return_chunks(self, data, minsize=48):
 
+        data.seek(0, SEEK_END)
+        file_size = data.tell()
+        data.seek(0, SEEK_SET)
+
         next_val = next(data, None)
 
         while next_val is not None:
@@ -155,6 +161,13 @@ class Decrypt(object):
             while (len(file_bytes) < minsize) and next_val is not None:
                 file_bytes += next_val
                 next_val = next(data, None)
+
+            if ((file_size - data.tell()) < minsize) and next_val is not None:
+                file_bytes += next_val
+                next_val = next(data, None)
+                while next_val is not None:
+                    file_bytes += next_val
+                    next_val = next(data, None)
 
             if next_val is None:
                 yield (file_bytes, None)
