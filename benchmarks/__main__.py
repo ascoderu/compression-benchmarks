@@ -71,9 +71,10 @@ def run_benchmarks(emails, results_dir, incremental):
 
         try:
             with Timer.timeit() as write_timer:
-                with compressor.open_write(outpath) as fobj:
+                with open(outpath, "wb") as fobj:
                     with encryptor.encrypt(fobj) as enc:
-                        serializer.serialize(iter(emails), enc)
+                        with compressor.write_stream(enc) as comp:
+                            serializer.serialize(iter(emails), comp)
 
         except Exception as ex:
             print_error('write', compressor, serializer, encryptor, ex)
@@ -85,10 +86,11 @@ def run_benchmarks(emails, results_dir, incremental):
 
         try:
             with Timer.timeit() as read_timer:
-                with compressor.open_read(outpath) as fobj:
-                    with encryptor.deserialize(fobj) as dec:
-                        for _ in serializer.deserialize(dec):
-                            pass
+                with open(outpath, "rb") as fobj:
+                    with encryptor.deserialize(fobj) as denc:
+                        with compressor.read_stream(denc) as decomp:
+                            for _ in serializer.deserialize(decomp):
+                                pass
 
         except Exception as ex:
             print_error('read', compressor, serializer, encryptor, ex)
