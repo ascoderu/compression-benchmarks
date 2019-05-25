@@ -1,6 +1,6 @@
 from abc import ABC
 from contextlib import contextmanager
-from gzip import open as gzip_open
+from gzip import GzipFile
 from os import remove
 from tarfile import open as tarfile_open
 from tempfile import NamedTemporaryFile
@@ -17,10 +17,10 @@ class _Compression(ABC):
     def extension(self) -> str:
         raise NotImplementedError
 
-    def open_write(self, path: str) -> IO[bytes]:
+    def compress(self, fobj: IO[bytes]) -> IO[bytes]:
         raise NotImplementedError
 
-    def open_read(self, path: str) -> IO[bytes]:
+    def decompress(self, fobj: IO[bytes]) -> IO[bytes]:
         raise NotImplementedError
 
 
@@ -28,24 +28,26 @@ class NoCompression(_Compression):
     extension = ''
 
     @classmethod
-    def open_write(cls, path: str) -> IO[bytes]:
-        return open(path, 'wb')
+    def compress(cls, fobj: IO[bytes]) -> IO[bytes]:
+        return fobj
 
     @classmethod
-    def open_read(cls, path: str) -> IO[bytes]:
-        return open(path, 'rb')
+    def decompress(cls, fobj: IO[bytes]) -> IO[bytes]:
+        return fobj
 
 
 class GzipCompression(_Compression):
     extension = '.gz'
 
-    @classmethod
-    def open_write(cls, path: str) -> IO[bytes]:
-        return gzip_open(path, 'wb')
+    @contextmanager
+    def compress(self, fobj: IO[bytes]) -> IO[bytes]:
+        with GzipFile(fileobj=fobj, mode='w') as compressed:
+            yield compressed
 
-    @classmethod
-    def open_read(cls, path: str) -> IO[bytes]:
-        return gzip_open(path, 'rb')
+    @contextmanager
+    def decompress(self, fobj: IO[bytes]) -> IO[bytes]:
+        with GzipFile(fileobj=fobj, mode='r') as decompressed:
+            yield decompressed
 
 
 class ZstandardCompression(_Compression):
@@ -57,22 +59,17 @@ class ZstandardCompression(_Compression):
         return '.{}.zs'.format(self.level)
 
     @contextmanager
-    def open_write(self, path: str) -> IO[bytes]:
+    def compress(self, fobj: IO[bytes]) -> IO[bytes]:
         compressor = ZstdCompressor(level=self.level)
-        fobj = open(path, 'wb')
-        try:
-            with compressor.stream_writer(fobj) as writer:
-                yield writer
-        finally:
-            fobj.close()
+        with compressor.stream_writer(fobj) as writer:
+            yield writer
 
     @contextmanager
-    def open_read(self, path: str) -> IO[bytes]:
+    def decompress(self, fobj: IO[bytes]) -> IO[bytes]:
         decompressor = ZstdDecompressor()
         outfobj = NamedTemporaryFile(delete=False)
         try:
-            with open(path, 'rb') as infobj:
-                decompressor.copy_stream(infobj, outfobj)
+            decompressor.copy_stream(fobj, outfobj)
             outfobj.seek(0)
             yield outfobj
         finally:
@@ -92,18 +89,18 @@ class _TarballCompression(_Compression):
         return '.tar.{}'.format(self.compression)
 
     @contextmanager
-    def open_write(self, path: str) -> IO[bytes]:
+    def compress(self, fobj: IO[bytes]) -> IO[bytes]:
         mode = 'w|{}'.format(self.compression)
-        with tarfile_open(path, mode) as archive:
+        with tarfile_open(fileobj=fobj, mode=mode) as archive:
             with NamedTemporaryFile() as buffer:
                 yield buffer
                 buffer.seek(0)
                 archive.add(buffer.name, self.filename)
 
     @contextmanager
-    def open_read(self, path: str) -> IO[bytes]:
+    def decompress(self, fobj: IO[bytes]) -> IO[bytes]:
         mode = 'r|{}'.format(self.compression)
-        archive = tarfile_open(path, mode)
+        archive = tarfile_open(fileobj=fobj, mode=mode)
         try:
             fobj = None
             while True:
@@ -114,8 +111,7 @@ class _TarballCompression(_Compression):
                     fobj = archive.extractfile(member)
                     break
             if fobj is None:
-                raise FileNotFoundError('{} not found in {}'
-                                        .format(self.filename, path))
+                raise FileNotFoundError('{} not found'.format(self.filename))
             try:
                 yield fobj
             finally:

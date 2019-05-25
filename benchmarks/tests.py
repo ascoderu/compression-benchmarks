@@ -16,11 +16,13 @@ class CompressionTests(TestCase):
                 expected = b'test content'
                 path = self.given_tempfile(compressor)
 
-                with compressor.open_write(path) as compressed:
-                    compressed.write(expected)
+                with open(path, 'wb') as fobj:
+                    with compressor.compress(fobj) as compressed:
+                        compressed.write(expected)
 
-                with compressor.open_read(path) as decompressed:
-                    actual = decompressed.read()
+                with open(path, 'rb') as fobj:
+                    with compressor.decompress(fobj) as decompressed:
+                        actual = decompressed.read()
 
                 self.assertEqual(actual, expected)
 
