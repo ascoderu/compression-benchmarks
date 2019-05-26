@@ -71,11 +71,10 @@ def run_benchmarks(emails, results_dir, incremental):
 
         try:
             with Timer.timeit() as write_timer:
-                with open(outpath, "wb") as fobj:
-                    with encryptor.encrypt(fobj) as enc:
-                        with compressor.write_stream(enc) as comp:
+                with open(outpath, 'wb') as raw:
+                    with encryptor.encrypt(raw) as enc:
+                        with compressor.compress(enc) as comp:
                             serializer.serialize(iter(emails), comp)
-
         except Exception as ex:
             print_error('write', compressor, serializer, encryptor, ex)
             write_time = BenchmarkError(ex)
@@ -86,12 +85,12 @@ def run_benchmarks(emails, results_dir, incremental):
 
         try:
             with Timer.timeit() as read_timer:
-                with open(outpath, "rb") as fobj:
-                    with encryptor.deserialize(fobj) as denc:
-                        with compressor.read_stream(denc) as decomp:
-                            for _ in serializer.deserialize(decomp):
-                                pass
-
+                with open(outpath, 'rb') as raw:
+                    with encryptor.deserialize(raw) as denc:
+                        with compressor.decompress(denc) as decomp:
+                            actuals = serializer.deserialize(decomp)
+                            for actual, expected in zip(actuals, emails):
+                                assert actual == expected
         except Exception as ex:
             print_error('read', compressor, serializer, encryptor, ex)
             read_time = BenchmarkError(ex)
@@ -178,6 +177,7 @@ def cli():
     parser.add_argument('--incremental', action='store_true')
     parser.add_argument('--display_format', default='csv')
     args = parser.parse_args()
+
     emails = load_samples(args.emails_zip_url, args.inputs_dir,
                           args.exclude_attachments)
 
