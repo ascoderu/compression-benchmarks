@@ -27,13 +27,13 @@ class _Compression(ABC):
 class NoCompression(_Compression):
     extension = ''
 
-    @classmethod
-    def compress(cls, fobj: IO[bytes]) -> IO[bytes]:
-        return fobj
+    @contextmanager
+    def compress(self, fobj: IO[bytes]) -> IO[bytes]:
+        yield fobj
 
-    @classmethod
-    def decompress(cls, fobj: IO[bytes]) -> IO[bytes]:
-        return fobj
+    @contextmanager
+    def decompress(self, fobj: IO[bytes]) -> IO[bytes]:
+        yield fobj
 
 
 class GzipCompression(_Compression):
