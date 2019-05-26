@@ -78,8 +78,6 @@ class SerializationTests(TestCase):
 class EncryptionTests(TempfilesTestCase):
     def test_roundtrip(self):
         for encryptor in encryptors():
-            if encryptor.extension != 'aes':
-                continue
             with self.subTest(encryptor=encryptor):
                 expected = b'some bytes'
 
@@ -89,8 +87,9 @@ class EncryptionTests(TempfilesTestCase):
                     with encryptor.encrypt(fobj) as encrypted:
                         encrypted.write(expected)
 
-                with open(path, 'rb') as fobj:
-                    self.assertNotEqual(fobj.read(), expected)
+                if encryptor.extension:
+                    with open(path, 'rb') as fobj:
+                        self.assertNotEqual(fobj.read(), expected)
 
                 with open(path, 'rb') as fobj:
                     with encryptor.deserialize(fobj) as decrypted:
