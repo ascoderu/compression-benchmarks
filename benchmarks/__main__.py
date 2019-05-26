@@ -83,8 +83,9 @@ def run_benchmarks(emails, results_dir, incremental):
             with Timer.timeit() as read_timer:
                 with open(outpath, 'rb') as raw:
                     with compressor.decompress(raw) as fobj:
-                        for _ in serializer.deserialize(fobj):
-                            pass
+                        actuals = serializer.deserialize(fobj)
+                        for actual, expected in zip(actuals, emails):
+                            assert actual == expected
         except Exception as ex:
             print_error('read', compressor, serializer, ex)
             read_time = BenchmarkError(ex)
