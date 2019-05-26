@@ -6,8 +6,8 @@ from tempfile import mkstemp
 from unittest import TestCase
 
 from benchmarks.compression import get_all as compressors
-from benchmarks.serialization import get_all as serializers
 from benchmarks.encryption import get_all as encryptors
+from benchmarks.serialization import get_all as serializers
 
 
 class TempfilesTestCase(TestCase):
@@ -80,7 +80,6 @@ class EncryptionTests(TempfilesTestCase):
         for encryptor in encryptors():
             if encryptor.extension != 'aes':
                 continue
-                
             with self.subTest(encryptor=encryptor):
                 expected = b'some bytes'
 
