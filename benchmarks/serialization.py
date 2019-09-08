@@ -101,6 +101,8 @@ class AvroSerialization(_Serialization):
              "type": ["null", "string"]},
             {"name": "_uid",
              "type": ["null", "string"]},
+            {"name": "read",
+             "type": ["null", "boolean"]},
             {"name": "to",
              "type": ["null", {"type": "array", "items": "string"}]},
             {"name": "cc",
