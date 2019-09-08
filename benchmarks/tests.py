@@ -60,14 +60,46 @@ class SerializationTests(TestCase):
     def test_roundtrip(self):
         for serializer in serializers():
             with self.subTest(serializer=serializer):
-                expected = [{
-                    'to': ['foo@bar'],
-                    'subject': 'baz',
-                    'attachments': [{
-                        'filename': 'attachment.txt',
-                        'content': b64encode(b'foo').decode('ascii')
-                    }],
-                }]
+                expected = [
+                    {
+                        'to': ['foo@bar'],
+                        'cc': [],
+                        'bcc': [],
+                        'from': 'from1@from',
+                        'subject': 'baz',
+                        'attachments': [
+                            {
+                                'filename': 'attachment.txt',
+                                'content': b64encode(b'foo').decode('ascii')
+                            },
+                            {
+                                'filename': 'attachment2.txt',
+                                'content': b64encode(b'bar').decode('ascii')
+                            },
+                        ],
+                    },
+                    {
+                        'to': ['bar@bar'],
+                        'cc': [],
+                        'bcc': [],
+                        'from': 'from2@from',
+                        'subject': 'foo',
+                        'attachments': [
+                            {
+                                'filename': 'attached.txt',
+                                'content': b64encode(b'foo').decode('ascii')
+                            },
+                        ],
+                    },
+                    {
+                        'to': ['baz@bar'],
+                        'cc': [],
+                        'bcc': [],
+                        'from': 'from3@from',
+                        'subject': 'baz',
+                        'attachments': [],
+                    },
+                ]
                 fobj = BytesIO()
                 serializer.serialize(expected, fobj)
                 fobj.seek(0)
