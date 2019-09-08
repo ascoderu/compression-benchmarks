@@ -89,8 +89,15 @@ def run_benchmarks(emails, results_dir, incremental):
                     with encryptor.deserialize(raw) as denc:
                         with compressor.decompress(denc) as decomp:
                             actuals = serializer.deserialize(decomp)
-                            for actual, expected in zip(actuals, emails):
-                                assert actual == expected
+                            for i, (actual, expected) in enumerate(zip(actuals, emails)):
+                                for key in actual.keys() | expected.keys():
+                                    actual_value = actual.get(key)
+                                    expected_value = expected.get(key)
+                                    assert \
+                                        (actual_value == expected_value) or \
+                                        (not actual_value and not expected_value), \
+                                        'i={},key={},actual={},expected={}'.format(
+                                            i, key, actual_value, expected_value)
         except Exception as ex:
             print_error('read', compressor, serializer, encryptor, ex)
             read_time = BenchmarkError(ex)
