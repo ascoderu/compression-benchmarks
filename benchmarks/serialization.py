@@ -16,6 +16,8 @@ from typing import IO
 from typing import Iterable
 
 from bson import BSON
+from cbor import dump as cbor_dump
+from cbor import load as cbor_load
 from fastavro import parse_schema as avro_parse_schema
 from fastavro import reader as avro_reader
 from fastavro import writer as avro_writer
@@ -51,6 +53,27 @@ class JsonLinesSerialization(_Serialization):
     def deserialize(cls, fobj: IO[bytes]) -> Iterable[dict]:
         for line in fobj:
             yield loads(line.decode(cls.encoding))
+
+
+class CborSerialization(_Serialization):
+    extension = '.cbor'
+
+    @classmethod
+    def serialize(cls, objs: Iterable[dict], fobj: IO[bytes]):
+        for obj in objs:
+            obj = byteify_attachments(obj)
+            cbor_dump(obj, fobj)
+
+    @classmethod
+    def deserialize(cls, fobj: IO[bytes]) -> Iterable[dict]:
+        while True:
+            try:
+                obj = cbor_load(fobj)
+            except EOFError:
+                break
+            else:
+                obj = unbyteify_attachments(obj)
+                yield obj
 
 
 class BsonLinesSerialization(_Serialization):
@@ -350,6 +373,7 @@ def unbyteify_attachments(obj: dict) -> dict:
 def get_all() -> Iterable[_Serialization]:
     return (
         JsonLinesSerialization(),
+        CborSerialization(),
         BsonLinesSerialization(),
         MsgpackSerialization(),
         AvroSerialization(),
