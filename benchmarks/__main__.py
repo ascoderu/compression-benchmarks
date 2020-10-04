@@ -49,6 +49,16 @@ def load_samples(zip_url, inputs_dir, exclude_attachments):
     return sample_emails
 
 
+def print_progress(compressor, serializer, encryptor, i, total):
+    print('Running {}+{}+{} ({}/{})'.format(
+        pretty_extension(compressor.extension),
+        pretty_extension(serializer.extension),
+        pretty_extension(encryptor.extension),
+        i + 1,
+        total,
+    ), file=stderr)
+
+
 def print_error(stage, compressor, serializer, encryptor, ex):
     print('Error during {}-phase in {}+{}+{}: {}'.format(
         stage,
@@ -62,12 +72,17 @@ def print_error(stage, compressor, serializer, encryptor, ex):
 def run_benchmarks(emails, results_dir, incremental):
     makedirs(results_dir, exist_ok=True)
 
-    for compressor, serializer, encryptor in product(compressors(), serializers(), encryptors()):
+    jobs = list(product(compressors(), serializers(), encryptors()))
+    num_jobs = len(jobs)
+
+    for i, (compressor, serializer, encryptor) in enumerate(jobs):
         outpath = join(results_dir, 'emails{}{}{}'.format(
             serializer.extension, compressor.extension, encryptor.extension))
 
         if incremental and isfile(outpath):
             continue
+
+        print_progress(compressor, serializer, encryptor, i, num_jobs)
 
         try:
             with Timer.timeit() as write_timer:
