@@ -4,6 +4,8 @@
 
 Benchmarks for the Lokole [email data exchange protocol](https://github.com/ascoderu/opwen-cloudserver#data-exchange-format).
 
+> :bulb: Do you know a compression or serialization that could make our data even smaller? Then open a pull request! :octocat:
+
 ## Setup
 
 Install the requirements with `pip install -r requirements.txt`.
