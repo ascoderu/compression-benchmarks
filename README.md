@@ -8,7 +8,7 @@ Benchmarks for the Lokole [email data exchange protocol](https://github.com/asco
 
 ## Setup
 
-Install the requirements with `pip install -r requirements.txt`.
+Install the requirements with `pip install -r requirements.txt -r requirements-dev.txt`.
 
 Run the tests with `python3 -m benchmarks.tests` and run the linter with `flake8 benchmarks`.
 
@@ -16,4 +16,4 @@ Run the benchmarks via `python3 -u -m benchmarks <emails-zip-url>`.
 
 ## Results
 
-Benchmark results are kept up to date by Travis at [ascoderu/compression-benchmarks](https://ascoderu.ca/compression-benchmarks/).
+Benchmark results are kept up to date by Github Actions at [ascoderu/compression-benchmarks](https://ascoderu.ca/compression-benchmarks/).

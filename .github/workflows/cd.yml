@@ -1,0 +1,33 @@
+name: CD
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  cd:
+    runs-on: ubuntu-18.04
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Setup Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.6'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Generate benchmark
+        run: mkdir -p ./html && python -u -m benchmarks --display_format=html "$EMAILS_ZIP_URL" | tee ./html/index.html
+        env:
+          EMAILS_ZIP_URL: ${{ secrets.EMAILS_ZIP_URL }}
+
+      - name: Deploy report
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./html
