@@ -177,10 +177,10 @@ def display_benchmarks(results, display_format, buffer=stdout):
         buffer.write('  <script src="https://unpkg.com/tablesort@5.1.0/dist/tablesort.min.js"></script>\n')  # noqa: E501
         buffer.write('  <script src="https://unpkg.com/tablesort@5.1.0/dist/sorts/tablesort.number.min.js"></script>\n')  # noqa: E501
         buffer.write('  <script>new Tablesort(document.getElementById("benchmarks"))</script>\n')  # noqa: E501
-        if getenv('TRAVIS_COMMIT') and getenv('TRAVIS_REPO_SLUG'):
-            buffer.write('  <a class="pure-button" href="https://github.com/{}/tree/{}">View code</a>\n'.format(getenv('TRAVIS_REPO_SLUG'), getenv('TRAVIS_COMMIT')))  # noqa: E501
-        if getenv('TRAVIS_BUILD_WEB_URL'):
-            buffer.write('  <a class="pure-button" href="{}">View build</a>\n'.format(getenv('TRAVIS_BUILD_WEB_URL')))  # noqa: E501
+        if getenv('GITHUB_SHA') and getenv('GITHUB_REPOSITORY'):
+            buffer.write('  <a class="pure-button" href="https://github.com/{}/tree/{}">View code</a>\n'.format(getenv('GITHUB_REPOSITORY'), getenv('GITHUB_SHA')))  # noqa: E501
+        if getenv('GITHUB_RUN_ID') and getenv('GITHUB_REPOSITORY'):
+            buffer.write('  <a class="pure-button" href="https://github.com/{}/actions/runs/{}">View build</a>\n'.format(getenv('GITHUB_REPOSITORY'), getenv('GITHUB_RUN_ID')))  # noqa: E501
         buffer.write(' </body>\n')
         buffer.write('</html>\n')
 
